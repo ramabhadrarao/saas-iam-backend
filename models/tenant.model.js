@@ -51,6 +51,22 @@ const tenantSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  // User limit fields
+  userLimit: {
+    type: Number,
+    default: 5, // Default limit for free plan
+    min: 1
+  },
+  // Override limits (for custom plans)
+  overrideLimits: {
+    hasCustomLimits: {
+      type: Boolean,
+      default: false
+    },
+    userLimit: Number,
+    storageLimit: Number,
+    apiCallsLimit: Number
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -72,6 +88,56 @@ tenantSchema.pre('validate', function(next) {
   }
   next();
 });
+
+// Add method to check if a tenant has reached the user limit
+tenantSchema.methods.hasReachedUserLimit = async function() {
+  const userCount = await mongoose.model('User').countDocuments({ 
+    tenantId: this._id,
+    isActive: true
+  });
+  
+  // Get the effective user limit
+  let effectiveUserLimit;
+  if (this.overrideLimits && this.overrideLimits.hasCustomLimits && this.overrideLimits.userLimit) {
+    effectiveUserLimit = this.overrideLimits.userLimit;
+  } else {
+    // Use the plan-based limits if no custom limits
+    const planLimits = {
+      free: 5,
+      starter: 20,
+      professional: 100,
+      enterprise: 500
+    };
+    effectiveUserLimit = planLimits[this.plan] || 5; // Default to free plan limit
+  }
+  
+  return userCount >= effectiveUserLimit;
+};
+
+// Add method to get current user count
+tenantSchema.methods.getUserCount = async function() {
+  return mongoose.model('User').countDocuments({ 
+    tenantId: this._id,
+    isActive: true
+  });
+};
+
+// Add method to get effective user limit
+tenantSchema.methods.getEffectiveUserLimit = function() {
+  if (this.overrideLimits && this.overrideLimits.hasCustomLimits && this.overrideLimits.userLimit) {
+    return this.overrideLimits.userLimit;
+  }
+  
+  // Use the plan-based limits if no custom limits
+  const planLimits = {
+    free: 5,
+    starter: 20,
+    professional: 100,
+    enterprise: 500
+  };
+  
+  return planLimits[this.plan] || 5; // Default to free plan limit
+};
 
 // Add virtual for full domain
 tenantSchema.virtual('domain').get(function() {
