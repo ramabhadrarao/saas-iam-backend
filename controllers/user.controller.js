@@ -4,6 +4,7 @@ const Role = require('../models/role.model');
 const UserRole = require('../models/userRole.model');
 const { createAuditLog } = require('../utils/auditLogger');
 
+// Fixed createUser function for user.controller.js
 exports.createUser = async (req, res) => {
   try {
     const { 
@@ -16,6 +17,27 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
     
+    // Handle tenant ID assignment
+    let userTenantId;
+    
+    if (userType === 'master_admin') {
+      // Master admins don't need a tenant ID
+      userTenantId = null;
+    } else if (userType === 'tenant_admin' || userType === 'tenant_user') {
+      // For tenant users, if a tenantId is specified, use it
+      if (tenantId) {
+        userTenantId = tenantId;
+      } 
+      // Otherwise, if the current user is a tenant admin, use their tenant ID
+      else if (req.user.userType === 'tenant_admin' && req.user.tenantId) {
+        userTenantId = req.user.tenantId;
+      } 
+      // If no tenant ID available, return error
+      else {
+        return res.status(400).json({ message: 'Tenant ID is required for tenant users and admins' });
+      }
+    }
+    
     // Create new user
     const newUser = new User({
       firstName,
@@ -23,7 +45,7 @@ exports.createUser = async (req, res) => {
       email,
       password, // Will be hashed by the pre-save hook
       userType,
-      tenantId: userType === 'master_admin' ? null : tenantId
+      tenantId: userTenantId
     });
     
     await newUser.save();
@@ -56,7 +78,6 @@ exports.createUser = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 exports.getUsers = async (req, res) => {
   try {
     const { userType, tenantId, page = 1, limit = 10 } = req.query;

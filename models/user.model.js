@@ -32,8 +32,13 @@ const userSchema = new mongoose.Schema({
   tenantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Tenant',
+    // Make tenantId required only for tenant_admin and tenant_user
     required: function() {
       return this.userType === 'tenant_admin' || this.userType === 'tenant_user';
+    },
+    // Set to null for master_admin
+    default: function() {
+      return this.userType === 'master_admin' ? null : undefined;
     }
   },
   isActive: {
@@ -62,7 +67,6 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare passwords
-// File: backend/models/user.model.js (update comparePassword method)
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
     console.log(`Comparing passwords for user: ${this.email}`);
