@@ -11,7 +11,7 @@ bashmkdir -p ~/data/rs0-0 ~/data/rs0-1 ~/data/rs0-2
 Step 2: Start MongoDB Instances
 Open three separate terminal windows and run one command in each:
 Terminal 1:
-bashmongod --replSet rs0 --port 27017 --dbpath ~/data/rs0-0 --bind_ip localhost
+bash mongod --replSet rs0 --port 27017 --dbpath ~/data/rs0-0 --bind_ip localhost
 Terminal 2:
 bashmongod --replSet rs0 --port 27018 --dbpath ~/data/rs0-1 --bind_ip localhost
 Terminal 3:

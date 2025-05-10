@@ -5,6 +5,7 @@ const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const UserRole = require('../models/userRole.model');
 const { createAuditLog } = require('../utils/auditLogger');
+const UsageTrackingService = require('../services/usageTracking.service');
 
 /**
  * Create a new tenant
@@ -624,6 +625,177 @@ exports.updateTenantLimits = async (req, res) => {
     
   } catch (error) {
     console.error('Update tenant limits error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Get detailed tenant usage data
+ */
+exports.getTenantUsageDetails = async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    
+    // Check if tenant exists
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+    
+    // Get usage metrics
+    const usageMetrics = await UsageTrackingService.getUsageMetrics(tenantId);
+    
+    // Get historical usage data (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get API call history by day
+    const apiCallsByDay = await AuditLog.aggregate([
+      { $match: { 
+        tenantId: mongoose.Types.ObjectId(tenantId), 
+        createdAt: { $gte: thirtyDaysAgo } 
+      }},
+      { $group: {
+        _id: { 
+          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } 
+        },
+        count: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } }
+    ]);
+    
+    // Get user growth
+    const userGrowth = await User.aggregate([
+      { $match: { 
+        tenantId: mongoose.Types.ObjectId(tenantId),
+        createdAt: { $gte: thirtyDaysAgo } 
+      }},
+      { $group: {
+        _id: { 
+          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } 
+        },
+        count: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } }
+    ]);
+    
+    res.status(200).json({
+      usageMetrics,
+      historicalData: {
+        apiCallsByDay,
+        userGrowth
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get tenant usage details error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Update tenant settings
+ */
+exports.updateTenantSettings = async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const { settings } = req.body;
+    
+    const tenant = await Tenant.findById(tenantId);
+    
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+    
+    // Update settings (merge with existing)
+    tenant.settings = { ...tenant.settings, ...settings };
+    await tenant.save();
+    
+    // Log tenant settings update
+    await createAuditLog({
+      userId: req.user.id,
+      action: 'UPDATE',
+      module: 'TENANT',
+      description: `Tenant ${tenant.name} settings updated`,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+      tenantId: req.user.tenantId
+    });
+    
+    res.status(200).json({
+      message: 'Tenant settings updated successfully',
+      settings: tenant.settings
+    });
+    
+  } catch (error) {
+    console.error('Update tenant settings error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Get available tenant plans
+ */
+exports.getTenantPlans = async (req, res) => {
+  try {
+    // Define available plans
+    const plans = [
+      {
+        id: 'free',
+        name: 'Free',
+        description: 'Basic plan for small teams',
+        price: 0,
+        features: [
+          { name: 'Users', value: '5 users' },
+          { name: 'Storage', value: '1 GB' },
+          { name: 'API Calls', value: '1,000 per day' }
+        ]
+      },
+      {
+        id: 'starter',
+        name: 'Starter',
+        description: 'For growing teams',
+        price: 49,
+        features: [
+          { name: 'Users', value: '20 users' },
+          { name: 'Storage', value: '10 GB' },
+          { name: 'API Calls', value: '10,000 per day' },
+          { name: 'Priority Support', value: 'Email support' }
+        ]
+      },
+      {
+        id: 'professional',
+        name: 'Professional',
+        description: 'For established businesses',
+        price: 199,
+        features: [
+          { name: 'Users', value: '100 users' },
+          { name: 'Storage', value: '50 GB' },
+          { name: 'API Calls', value: '100,000 per day' },
+          { name: 'Priority Support', value: 'Email & phone support' },
+          { name: 'Advanced Analytics', value: 'Included' }
+        ]
+      },
+      {
+        id: 'enterprise',
+        name: 'Enterprise',
+        description: 'For large organizations',
+        price: 499,
+        features: [
+          { name: 'Users', value: '500 users' },
+          { name: 'Storage', value: '500 GB' },
+          { name: 'API Calls', value: '1,000,000 per day' },
+          { name: 'Priority Support', value: 'Dedicated support manager' },
+          { name: 'Advanced Analytics', value: 'Included' },
+          { name: 'Custom Integrations', value: 'Included' }
+        ]
+      }
+    ];
+    
+    res.status(200).json({ plans });
+    
+  } catch (error) {
+    console.error('Get tenant plans error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

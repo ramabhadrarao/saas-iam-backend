@@ -70,4 +70,26 @@ router.patch('/:id/limits',
   authorize(['manage_tenant']), 
   asyncHandler(tenantController.updateTenantLimits)
 );
+
+// Get detailed tenant usage data
+router.get('/:id/usage-details', 
+  authenticate, 
+  authorize(['read_tenant']),
+  checkTenantAccess,
+  asyncHandler(tenantController.getTenantUsageDetails)
+);
+
+// Update tenant settings
+router.patch('/:id/settings', 
+  authenticate, 
+  authorize(['update_tenant']),
+  checkTenantAccess,
+  asyncHandler(tenantController.updateTenantSettings)
+);
+
+// Get available tenant plans
+router.get('/plans', 
+  authenticate, 
+  asyncHandler(tenantController.getTenantPlans)
+);
 module.exports = router;

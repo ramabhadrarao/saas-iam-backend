@@ -67,6 +67,21 @@ const tenantSchema = new mongoose.Schema({
     storageLimit: Number,
     apiCallsLimit: Number
   },
+  usageMetrics: {
+    apiCalls: {
+      count: { type: Number, default: 0 },
+      totalResponseTime: { type: Number, default: 0 },
+      history: [{
+        endpoint: String,
+        responseTime: Number,
+        timestamp: Date
+      }]
+    },
+    storage: {
+      bytes: { type: Number, default: 0 }
+    },
+    lastUpdated: { type: Date, default: Date.now }
+  },
   createdAt: {
     type: Date,
     default: Date.now

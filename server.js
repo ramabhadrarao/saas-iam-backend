@@ -15,6 +15,8 @@ const auditRoutes = require('./routes/audit.routes');
 const socketService = require('./utils/socketService');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const tenantRoutes = require('./routes/tenant.routes'); 
+const { enforcePlanLimits } = require('./middleware/planEnforcement.middleware');
+
 const app = express();
 
 // Middleware
@@ -38,6 +40,7 @@ app.use('/api/v1/permissions', permissionRoutes);
 app.use('/api/v1/audit-logs', auditRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/tenants', tenantRoutes);
+app.use(enforcePlanLimits);
 // Error handling middleware
 app.use(errorHandler);
 

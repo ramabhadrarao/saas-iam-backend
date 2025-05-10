@@ -90,11 +90,123 @@ function emitSystemAlert(alert) {
   io.emit('system-alert', alert);
 }
 
+/**
+ * Emit a tenant update event
+ * @param {string} tenantId - ID of the tenant
+ * @param {Object} data - Tenant data to emit
+ */
+function emitTenantUpdate(tenantId, data) {
+  if (!io) return;
+  
+  // Emit to specific tenant room
+  io.to(`tenant-${tenantId}`).emit('tenant-update', data);
+}
+
+/**
+ * Join a user to tenant-specific room
+ * @param {string} socketId - Socket ID
+ * @param {string} tenantId - Tenant ID
+ */
+function joinTenantRoom(socketId, tenantId) {
+  if (!io) return;
+  
+  const socket = io.sockets.sockets.get(socketId);
+  if (socket) {
+    socket.join(`tenant-${tenantId}`);
+    console.log(`Socket ${socketId} joined tenant room: tenant-${tenantId}`);
+  }
+}
+
+/**
+ * Emit real-time security alert
+ * @param {Object} alert - Security alert data
+ */
+function emitSecurityAlert(alert) {
+  if (!io) return;
+  
+  // Security alerts go to everyone
+  io.emit('security-alert', alert);
+  
+  // If tenant-specific, also send to that tenant's room
+  if (alert.tenantId) {
+    io.to(`tenant-${alert.tenantId}`).emit('security-alert', alert);
+  }
+}
+
+/**
+ * Setup enhanced socket connections with authentication
+ * @param {Object} socket - Socket.IO socket
+ */
+function setupSocketAuth(socket) {
+  // Handle authentication
+  socket.on('authenticate', async (token) => {
+    try {
+      // Verify JWT token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Store user info on socket
+      socket.user = {
+        id: decoded.id,
+        email: decoded.email,
+        userType: decoded.userType,
+        tenantId: decoded.tenantId
+      };
+      
+      // Add socket to authenticated room
+      socket.join('authenticated');
+      
+      // If user belongs to a tenant, add to tenant room
+      if (decoded.tenantId) {
+        socket.join(`tenant-${decoded.tenantId}`);
+      }
+      
+      // Emit successful authentication
+      socket.emit('authenticated', { status: 'success' });
+      
+      console.log(`Socket ${socket.id} authenticated for user ${decoded.email}`);
+    } catch (error) {
+      console.error('Socket authentication error:', error);
+      socket.emit('authenticated', { status: 'error', message: 'Invalid token' });
+    }
+  });
+}
+
+// Update init function to use the new authentication
+function init(httpServer) {
+  io = require('socket.io')(httpServer, {
+    cors: {
+      origin: '*', // In production, set this to your frontend domain
+      methods: ['GET', 'POST']
+    }
+  });
+
+  io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+    
+    // Setup authentication
+    setupSocketAuth(socket);
+    
+    // Send initial dashboard data when client connects
+    emitDashboardUpdate();
+    
+    // Handle disconnect
+    socket.on('disconnect', () => {
+      console.log('Client disconnected:', socket.id);
+    });
+  });
+  
+  console.log('Socket.IO initialized with enhanced features');
+  return io;
+}
 module.exports = {
   init,
   getIO,
   emitDashboardUpdate,
   emitAuditLog,
   emitUserActivity,
-  emitSystemAlert
+  emitSystemAlert,
+  emitTenantUpdate,
+  joinTenantRoom,
+  emitSecurityAlert,
+  setupSocketAuth
 };

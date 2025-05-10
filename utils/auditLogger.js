@@ -1,5 +1,7 @@
 // File: backend/utils/auditLogger.js
+// Update your existing auditLogger.js file
 const AuditLog = require('../models/auditLog.model');
+const AuditEventEmitter = require('../services/auditEventEmitter.service');
 
 /**
  * Create an audit log entry
@@ -26,6 +28,10 @@ exports.createAuditLog = async (logData) => {
     });
     
     await auditLog.save();
+    
+    // Emit real-time events based on this audit log
+    AuditEventEmitter.processAuditLog(auditLog);
+    
     return auditLog;
   } catch (error) {
     console.error('Error creating audit log:', error);
