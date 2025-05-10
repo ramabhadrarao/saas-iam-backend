@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Tenant Account Has Been Restored</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #10b981;
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        .content {
+            padding: 30px;
+        }
+        .notice {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-weight: 500;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #059669;
+        }
+        .footer {
+            background-color: #f1f5f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Account Has Been Restored</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{firstName}},</p>
+            
+            <div class="notice">
+                <p>We're pleased to inform you that your tenant account <strong>{{tenantName}}</strong> has been restored and is now active again.</p>
+            </div>
+            
+            <p>You and your users can now login and access all the features and data as before. No data has been lost during the suspension period.</p>
+            
+            <a href="{{loginUrl}}" class="button">Access Your Account</a>
+            
+            <p>If you have any questions or need assistance getting back up and running, please don't hesitate to contact our support team.</p>
+            
+            <p>Thank you for your patience during this process.</p>
+            
+            <p>Best regards,<br>
+            The Multi-Tenant Platform Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{year}} Multi-Tenant Platform. All rights reserved.</p>
+            <p>This is an automated email, please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html>

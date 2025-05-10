@@ -1,16 +1,23 @@
 // File: backend/controllers/tenant.controller.js
-const mongoose = require('mongoose');  // Add this line to import mongoose
+const mongoose = require('mongoose');
 const Tenant = require('../models/tenant.model');
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const UserRole = require('../models/userRole.model');
 const { createAuditLog } = require('../utils/auditLogger');
 const UsageTrackingService = require('../services/usageTracking.service');
-
+const DbConnectionManager = require('../services/dbConnectionManager');
+const TenantDbInitializer = require('../services/tenantDbInitializer');
+const { AppError } = require('../middleware/errorHandler');
+const emailService = require('../services/emailService');
 /**
  * Create a new tenant
  */
-exports.createTenant = async (req, res) => {
+exports.createTenant = async (req, res, next) => {
+  // Start a session for transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
     const { 
       name, 
@@ -31,99 +38,123 @@ exports.createTenant = async (req, res) => {
       return res.status(400).json({ message: 'Tenant with this subdomain already exists' });
     }
     
-    // Start a session for transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // 1. Create the tenant in the master database
+    const tenant = new Tenant({
+      name,
+      subdomain,
+      plan,
+      contactEmail,
+      contactPhone,
+      address,
+      createdBy: req.user.id
+    });
     
-    try {
-      // 1. Create the tenant
-      const tenant = new Tenant({
-        name,
-        subdomain,
-        plan,
-        contactEmail,
-        contactPhone,
-        address,
-        createdBy: req.user.id
-      });
-      
-      await tenant.save({ session });
-      
-      // 2. Create tenant admin user if admin details provided
-      if (adminEmail && adminPassword) {
-        // Check if user with email already exists
-        const existingUser = await User.findOne({ email: adminEmail });
-        if (existingUser) {
-          throw new Error('User with this email already exists');
-        }
-        
-        // Create tenant admin user
-        const adminUser = new User({
-          firstName: adminFirstName || 'Admin',
-          lastName: adminLastName || 'User',
-          email: adminEmail,
-          password: adminPassword, // Will be hashed by the pre-save hook
-          userType: 'tenant_admin',
-          tenantId: tenant._id,
-          isActive: true
-        });
-        
-        await adminUser.save({ session });
-        
-        // 3. Assign tenant admin role to the user
-        // Find the Tenant Admin role
-        const tenantAdminRole = await Role.findOne({ 
-          name: 'Tenant Admin',
-          isSystemRole: true
-        });
-        
-        if (tenantAdminRole) {
-          const userRole = new UserRole({
-            userId: adminUser._id,
-            roleId: tenantAdminRole._id,
-            tenantId: tenant._id
-          });
-          
-          await userRole.save({ session });
-        }
+    await tenant.save({ session });
+    
+    // 2. Prepare admin user data if provided
+    let adminUser = null;
+    if (adminEmail && adminPassword) {
+      // Check if user with email already exists
+      const existingUser = await User.findOne({ email: adminEmail });
+      if (existingUser) {
+        throw new AppError('User with this email already exists', 400);
       }
       
-      // Commit the transaction
-      await session.commitTransaction();
-      session.endSession();
-      
-      // Log tenant creation
-      await createAuditLog({
-        userId: req.user.id,
-        action: 'CREATE',
-        module: 'TENANT',
-        description: `Tenant ${name} (${subdomain}) created`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent']
-      });
-      
-      res.status(201).json({
-        message: 'Tenant created successfully',
-        tenant: {
-          id: tenant._id,
-          name: tenant.name,
-          subdomain: tenant.subdomain,
-          domain: tenant.domain,
-          plan: tenant.plan,
-          isActive: tenant.isActive,
-          createdAt: tenant.createdAt
-        }
-      });
-      
-    } catch (err) {
-      // Abort transaction on error
-      await session.abortTransaction();
-      session.endSession();
-      throw err;
+      adminUser = {
+        firstName: adminFirstName || 'Admin',
+        lastName: adminLastName || 'User',
+        email: adminEmail,
+        password: adminPassword,
+        userType: 'tenant_admin'
+      };
     }
     
+    // 3. Create and initialize tenant database
+    await TenantDbInitializer.initializeTenantDatabase(tenant, adminUser);
+    
+    // 4. Create a reference to the tenant admin in the master database if admin details provided
+    if (adminUser) {
+      const adminUserMaster = new User({
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        email: adminUser.email,
+        password: adminUser.password, // Will be hashed by the pre-save hook
+        userType: 'tenant_admin',
+        tenantId: tenant._id,
+        isActive: true
+      });
+      
+      await adminUserMaster.save({ session });
+      
+      // Assign tenant admin role to the user in master DB
+      const tenantAdminRole = await Role.findOne({ 
+        name: 'Tenant Admin',
+        isSystemRole: true
+      });
+      
+      if (tenantAdminRole) {
+        const userRole = new UserRole({
+          userId: adminUserMaster._id,
+          roleId: tenantAdminRole._id,
+          tenantId: tenant._id
+        });
+        
+        await userRole.save({ session });
+      }
+    }
+    
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+    //Send welcome email to tenant admin
+    if (adminUser) {
+      try {
+        await emailService.sendTenantWelcomeEmail(tenant, {
+          firstName: adminUser.firstName,
+          lastName: adminUser.lastName,
+          email: adminUser.email
+        }, adminPassword);
+        
+        console.log(`Welcome email sent to ${adminUser.email}`);
+      } catch (emailError) {
+        console.error('Error sending welcome email:', emailError);
+        // Continue even if email fails
+      }
+    }
+    // Log tenant creation
+    await createAuditLog({
+      userId: req.user.id,
+      action: 'CREATE',
+      module: 'TENANT',
+      description: `Tenant ${name} (${subdomain}) created`,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    
+    res.status(201).json({
+      message: 'Tenant created successfully',
+      tenant: {
+        id: tenant._id,
+        name: tenant.name,
+        subdomain: tenant.subdomain,
+        domain: tenant.domain,
+        plan: tenant.plan,
+        isActive: tenant.isActive,
+        createdAt: tenant.createdAt
+      }
+    });
+    
   } catch (error) {
+    // Abort transaction on error
+    await session.abortTransaction();
+    session.endSession();
+    
     console.error('Create tenant error:', error);
+    
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
@@ -202,8 +233,12 @@ exports.getTenantById = async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
     
+    // Get tenant database connection to count users
+    const tenantConnection = await DbConnectionManager.getTenantConnection(tenant._id);
+    const TenantUser = tenantConnection.model('User');
+    
     // Count users in this tenant
-    const userCount = await User.countDocuments({ tenantId: tenant._id });
+    const userCount = await TenantUser.countDocuments();
     
     res.status(200).json({
       tenant: {
@@ -214,6 +249,11 @@ exports.getTenantById = async (req, res) => {
     
   } catch (error) {
     console.error('Get tenant by ID error:', error);
+    
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -268,6 +308,19 @@ exports.updateTenant = async (req, res) => {
     
     await tenant.save();
     
+    // If tenant was activated or deactivated, update the tenant connection
+    if (isActive !== undefined) {
+      if (isActive) {
+        // If tenant was reactivated, ensure we have a connection
+        if (!DbConnectionManager.getActiveTenantConnections()[tenantId]) {
+          await DbConnectionManager.getTenantConnection(tenantId);
+        }
+      } else {
+        // If tenant was deactivated, remove the connection
+        DbConnectionManager.removeTenantConnection(tenantId);
+      }
+    }
+    
     // Log tenant update
     await createAuditLog({
       userId: req.user.id,
@@ -313,6 +366,24 @@ exports.suspendTenant = async (req, res) => {
     tenant.isActive = false;
     await tenant.save();
     
+    // Remove tenant connection
+    DbConnectionManager.removeTenantConnection(tenantId);
+    // Send suspension email to tenant admin users
+    try {
+      // Find tenant admin users
+      const adminUsers = await User.find({ 
+        tenantId: tenant._id,
+        userType: 'tenant_admin'
+      });
+      
+      // Send emails to all admins
+      for (const admin of adminUsers) {
+        await emailService.sendTenantSuspensionEmail(tenant, admin, reason);
+      }
+    } catch (emailError) {
+      console.error('Error sending suspension emails:', emailError);
+      // Continue even if emails fail
+    }
     // Log tenant suspension
     await createAuditLog({
       userId: req.user.id,
@@ -354,7 +425,32 @@ exports.restoreTenant = async (req, res) => {
     
     tenant.isActive = true;
     await tenant.save();
-    
+    // Send restoration emails to tenant admin users
+    try {
+      // Find tenant admin users
+      const adminUsers = await User.find({ 
+        tenantId: tenant._id,
+        userType: 'tenant_admin'
+      });
+      
+      // Send emails to all admins
+      for (const admin of adminUsers) {
+        await emailService.sendTemplateEmail({
+          to: admin.email,
+          subject: `Your Tenant Account Has Been Restored - ${tenant.name}`,
+          templateName: 'tenant-restoration',
+          templateData: {
+            firstName: admin.firstName,
+            tenantName: tenant.name,
+            loginUrl: `https://${tenant.subdomain}.${process.env.APP_DOMAIN || 'example.com'}/login`,
+            year: new Date().getFullYear()
+          }
+        });
+      }
+    } catch (emailError) {
+      console.error('Error sending restoration emails:', emailError);
+      // Continue even if emails fail
+    }
     // Log tenant restoration
     await createAuditLog({
       userId: req.user.id,
@@ -382,7 +478,7 @@ exports.restoreTenant = async (req, res) => {
 };
 
 /**
- * Delete a tenant (soft delete by deactivating)
+ * Delete a tenant (Hard delete - use with caution)
  */
 exports.deleteTenant = async (req, res) => {
   try {
@@ -394,23 +490,47 @@ exports.deleteTenant = async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
     
-    // For safety, we'll perform a soft delete by deactivating
-    tenant.isActive = false;
-    await tenant.save();
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
     
-    // Log tenant deletion
-    await createAuditLog({
-      userId: req.user.id,
-      action: 'DELETE',
-      module: 'TENANT',
-      description: `Tenant ${tenant.name} (${tenant.subdomain}) deleted (soft delete)`,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent']
-    });
-    
-    res.status(200).json({
-      message: 'Tenant deleted successfully'
-    });
+    try {
+      // Remove tenant connection
+      DbConnectionManager.removeTenantConnection(tenantId);
+      
+      // Delete tenant users in master DB
+      await User.deleteMany({ tenantId: tenant._id }, { session });
+      
+      // Delete tenant roles in master DB
+      await UserRole.deleteMany({ tenantId: tenant._id }, { session });
+      
+      // Delete the tenant record
+      await tenant.deleteOne({ session });
+      
+      // Commit the transaction
+      await session.commitTransaction();
+      session.endSession();
+      
+      // Log tenant deletion
+      await createAuditLog({
+        userId: req.user.id,
+        action: 'DELETE',
+        module: 'TENANT',
+        description: `Tenant ${tenant.name} (${tenant.subdomain}) deleted`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
+      });
+      
+      res.status(200).json({
+        message: 'Tenant deleted successfully'
+      });
+      
+    } catch (error) {
+      // Abort transaction on error
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
     
   } catch (error) {
     console.error('Delete tenant error:', error);
@@ -431,9 +551,12 @@ exports.getTenantMetrics = async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
     
+    // Get tenant database connection
+    const tenantConnection = await DbConnectionManager.getTenantConnection(tenantId);
+    const TenantUser = tenantConnection.model('User');
+    
     // Count users by user type
-    const userCounts = await User.aggregate([
-      { $match: { tenantId: mongoose.Types.ObjectId(tenantId) } },
+    const userCounts = await TenantUser.aggregate([
       { $group: { _id: '$userType', count: { $sum: 1 } } }
     ]);
     
@@ -454,7 +577,7 @@ exports.getTenantMetrics = async (req, res) => {
     });
     
     // Get recent user activity
-    const recentActivity = await User.find({ tenantId })
+    const recentActivity = await TenantUser.find()
       .select('firstName lastName email lastLogin')
       .sort({ lastLogin: -1 })
       .limit(5);
@@ -477,12 +600,14 @@ exports.getTenantMetrics = async (req, res) => {
     
   } catch (error) {
     console.error('Get tenant metrics error:', error);
+    
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
-// Add these methods to the tenant controller
-// File: backend/controllers/tenant.controller.js (add these methods)
 
 /**
  * Get tenant usage data
@@ -497,9 +622,12 @@ exports.getTenantUsage = async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
     
+    // Get tenant database connection
+    const tenantConnection = await DbConnectionManager.getTenantConnection(tenantId);
+    const TenantUser = tenantConnection.model('User');
+    
     // Get current usage
-    const userCount = await User.countDocuments({ 
-      tenantId: tenant._id,
+    const userCount = await TenantUser.countDocuments({ 
       isActive: true
     });
     
@@ -561,6 +689,11 @@ exports.getTenantUsage = async (req, res) => {
     
   } catch (error) {
     console.error('Get tenant usage error:', error);
+    
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -645,14 +778,18 @@ exports.getTenantUsageDetails = async (req, res) => {
     // Get usage metrics
     const usageMetrics = await UsageTrackingService.getUsageMetrics(tenantId);
     
+    // Get tenant database connection
+    const tenantConnection = await DbConnectionManager.getTenantConnection(tenantId);
+    const TenantAuditLog = tenantConnection.model('AuditLog');
+    const TenantUser = tenantConnection.model('User');
+    
     // Get historical usage data (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     // Get API call history by day
-    const apiCallsByDay = await AuditLog.aggregate([
+    const apiCallsByDay = await TenantAuditLog.aggregate([
       { $match: { 
-        tenantId: mongoose.Types.ObjectId(tenantId), 
         createdAt: { $gte: thirtyDaysAgo } 
       }},
       { $group: {
@@ -665,9 +802,8 @@ exports.getTenantUsageDetails = async (req, res) => {
     ]);
     
     // Get user growth
-    const userGrowth = await User.aggregate([
+    const userGrowth = await TenantUser.aggregate([
       { $match: { 
-        tenantId: mongoose.Types.ObjectId(tenantId),
         createdAt: { $gte: thirtyDaysAgo } 
       }},
       { $group: {
@@ -689,6 +825,11 @@ exports.getTenantUsageDetails = async (req, res) => {
     
   } catch (error) {
     console.error('Get tenant usage details error:', error);
+    
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -710,6 +851,26 @@ exports.updateTenantSettings = async (req, res) => {
     // Update settings (merge with existing)
     tenant.settings = { ...tenant.settings, ...settings };
     await tenant.save();
+    
+    // Update settings in tenant database
+    const tenantConnection = await DbConnectionManager.getTenantConnection(tenantId);
+    const TenantSettings = tenantConnection.model('Settings');
+    
+    // Update or create tenant_info settings
+    await TenantSettings.updateOne(
+      { key: 'tenant_info' },
+      { 
+        $set: { 
+          value: {
+            name: tenant.name,
+            subdomain: tenant.subdomain,
+            plan: tenant.plan,
+            settings: tenant.settings
+          }
+        }
+      },
+      { upsert: true }
+    );
     
     // Log tenant settings update
     await createAuditLog({
