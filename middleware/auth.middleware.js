@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const UserRole = require('../models/userRole.model');
 const Role = require('../models/role.model');
+const mongoose = require('mongoose');
 
 exports.authenticate = async (req, res, next) => {
   try {
@@ -91,4 +92,27 @@ exports.authorize = (requiredPermissions = []) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+};
+
+// New middleware to check tenant access
+exports.checkTenantAccess = async (req, res, next) => {
+  try {
+    // Master admins have access to all tenants
+    if (req.user.userType === 'master_admin') {
+      return next();
+    }
+    
+    // For tenant operations with an ID parameter, check access
+    if (req.params.id) {
+      // Ensure tenant users can only access their own tenant
+      if (!req.user.tenantId || req.params.id !== req.user.tenantId.toString()) {
+        return res.status(403).json({ message: 'Access denied: You can only access your own tenant' });
+      }
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Tenant access check error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };

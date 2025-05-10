@@ -153,6 +153,11 @@ exports.getTenants = async (req, res) => {
       query.isActive = isActive === 'true';
     }
     
+    // For tenant_admin and tenant_user, only show their own tenant
+    if (req.user.userType !== 'master_admin') {
+      query._id = req.user.tenantId;
+    }
+    
     // Pagination
     const skip = (page - 1) * limit;
     
@@ -471,6 +476,154 @@ exports.getTenantMetrics = async (req, res) => {
     
   } catch (error) {
     console.error('Get tenant metrics error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Add these methods to the tenant controller
+// File: backend/controllers/tenant.controller.js (add these methods)
+
+/**
+ * Get tenant usage data
+ */
+exports.getTenantUsage = async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    
+    const tenant = await Tenant.findById(tenantId);
+    
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+    
+    // Get current usage
+    const userCount = await User.countDocuments({ 
+      tenantId: tenant._id,
+      isActive: true
+    });
+    
+    // Get plan limits
+    const planLimits = {
+      free: {
+        userLimit: 5,
+        storageLimit: 1, // GB
+        apiCallsLimit: 1000 // per day
+      },
+      starter: {
+        userLimit: 20,
+        storageLimit: 10, // GB
+        apiCallsLimit: 10000 // per day
+      },
+      professional: {
+        userLimit: 100,
+        storageLimit: 50, // GB
+        apiCallsLimit: 100000 // per day
+      },
+      enterprise: {
+        userLimit: 500,
+        storageLimit: 500, // GB
+        apiCallsLimit: 1000000 // per day
+      }
+    };
+    
+    // Default to free plan if plan doesn't exist
+    const baseLimits = planLimits[tenant.plan] || planLimits.free;
+    
+    // Check if tenant has custom limits
+    const hasCustomLimits = tenant.overrideLimits && tenant.overrideLimits.hasCustomLimits;
+    
+    // Use custom limits if available, otherwise use plan defaults
+    const actualLimits = hasCustomLimits ? 
+      tenant.overrideLimits : 
+      { userLimit: baseLimits.userLimit };
+    
+    res.status(200).json({
+      tenant: {
+        ...tenant.toObject(),
+        planLimits
+      },
+      usage: {
+        users: {
+          current: userCount,
+          limit: actualLimits.userLimit || baseLimits.userLimit
+        },
+        storage: {
+          current: 0.1, // Placeholder for actual storage calculation
+          limit: actualLimits.storageLimit || baseLimits.storageLimit
+        },
+        apiCalls: {
+          current: 145, // Placeholder for actual API call counting
+          limit: actualLimits.apiCallsLimit || baseLimits.apiCallsLimit
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get tenant usage error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Update tenant limits
+ */
+exports.updateTenantLimits = async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const { 
+      hasCustomLimits, 
+      userLimit, 
+      storageLimit, 
+      apiCallsLimit 
+    } = req.body;
+    
+    const tenant = await Tenant.findById(tenantId);
+    
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+    
+    // Update tenant limits
+    if (!tenant.overrideLimits) {
+      tenant.overrideLimits = {};
+    }
+    
+    tenant.overrideLimits.hasCustomLimits = hasCustomLimits;
+    
+    if (hasCustomLimits) {
+      tenant.overrideLimits.userLimit = userLimit;
+      tenant.overrideLimits.storageLimit = storageLimit;
+      tenant.overrideLimits.apiCallsLimit = apiCallsLimit;
+    } else {
+      // Reset to plan defaults
+      tenant.overrideLimits.userLimit = undefined;
+      tenant.overrideLimits.storageLimit = undefined;
+      tenant.overrideLimits.apiCallsLimit = undefined;
+    }
+    
+    await tenant.save();
+    
+    // Log tenant limits update
+    await createAuditLog({
+      userId: req.user.id,
+      action: 'UPDATE',
+      module: 'TENANT',
+      description: `Tenant ${tenant.name} limits updated`,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    
+    res.status(200).json({
+      message: 'Tenant limits updated successfully',
+      tenant: {
+        id: tenant._id,
+        name: tenant.name,
+        overrideLimits: tenant.overrideLimits
+      }
+    });
+    
+  } catch (error) {
+    console.error('Update tenant limits error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

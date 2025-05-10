@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const tenantController = require('../controllers/tenant.controller');
-const { authenticate, authorize } = require('../middleware/auth.middleware');
+const { authenticate, authorize,checkTenantAccess  } = require('../middleware/auth.middleware');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 // Tenant CRUD operations
@@ -20,19 +20,22 @@ router.get('/',
 
 router.get('/:id', 
   authenticate, 
-  authorize(['read_tenant']), 
+  authorize(['read_tenant']),
+  checkTenantAccess,  
   asyncHandler(tenantController.getTenantById)
 );
 
 router.patch('/:id', 
   authenticate, 
-  authorize(['update_tenant']), 
+  authorize(['update_tenant']),
+  checkTenantAccess,  // Add this middleware
   asyncHandler(tenantController.updateTenant)
 );
 
 router.delete('/:id', 
   authenticate, 
-  authorize(['delete_tenant']), 
+  authorize(['delete_tenant']),
+  checkTenantAccess,  // Add this middleware
   asyncHandler(tenantController.deleteTenant)
 );
 
@@ -56,4 +59,15 @@ router.get('/:id/metrics',
   asyncHandler(tenantController.getTenantMetrics)
 );
 
+router.get('/:id/usage', 
+  authenticate, 
+  authorize(['read_tenant']), 
+  asyncHandler(tenantController.getTenantUsage)
+);
+
+router.patch('/:id/limits', 
+  authenticate, 
+  authorize(['manage_tenant']), 
+  asyncHandler(tenantController.updateTenantLimits)
+);
 module.exports = router;
