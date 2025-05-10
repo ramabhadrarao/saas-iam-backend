@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Multi-Tenant SaaS Platform - API Documentation</title>
+  <!-- CSS files -->
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-flags.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-payments.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-vendors.min.css" rel="stylesheet">
+  <style>
+    @import url('https://rsms.me/inter/inter.css');
+    :root {
+      --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+    }
+    body {
+      font-feature-settings: "cv03", "cv04", "cv11";
+    }
+    .method-badge {
+      min-width: 80px;
+    }
+    .method-get {
+      background-color: #3498db;
+    }
+    .method-post {
+      background-color: #2ecc71;
+    }
+    .method-put, .method-patch {
+      background-color: #f39c12;
+    }
+    .method-delete {
+      background-color: #e74c3c;
+    }
+    .curl-example {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    pre {
+      margin-bottom: 0;
+    }
+    .api-table th {
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Sidebar -->
+    <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark">
+      <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <h1 class="navbar-brand navbar-brand-autodark">
+          <a href=".">
+            <img src="https://preview.tabler.io/static/logo-white.svg" width="110" height="32" alt="Tabler" class="navbar-brand-image">
+          </a>
+        </h1>
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+          <ul class="navbar-nav pt-lg-3">
+            <li class="nav-item">
+              <a class="nav-link" href="#dashboard">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></svg>
+                </span>
+                <span class="nav-link-title">Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#authentication">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855" /></svg>
+                </span>
+                <span class="nav-link-title">Authentication</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#users">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></svg>
+                </span>
+                <span class="nav-link-title">Users</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#roles">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z" /></svg>
+                </span>
+                <span class="nav-link-title">Roles</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#tenants">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M5 21v-14l8 -4v18" /><path d="M19 21v-10l-6 -4" /><path d="M9 9l0 .01" /><path d="M9 12l0 .01" /><path d="M9 15l0 .01" /><path d="M9 18l0 .01" /></svg>
+                </span>
+                <span class="nav-link-title">Tenants</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#permissions">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9h-7a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h3" /><path d="M12 15h7a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-3" /><path d="M8 9v-4a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v5a2 2 0 0 1 -2 2h-4a2 2 0 0 0 -2 2v5a2 2 0 0 0 2 2h4a2 2 0 0 0 2 -2v-4" /><path d="M12 6l0 0" /><path d="M12 18l0 0" /></svg>
+                </span>
+                <span class="nav-link-title">Permissions</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#audit-logs">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M9 17h6" /><path d="M9 13h6" /></svg>
+                </span>
+                <span class="nav-link-title">Audit Logs</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+    <div class="page-wrapper">
+      <!-- Page header -->
+      <div class="page-header d-print-none">
+        <div class="container-xl">
+          <div class="row g-2 align-items-center">
+            <div class="col">
+              <h2 class="page-title">
+                API Documentation
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Page body -->
+      <div class="page-body">
+        <div class="container-xl">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h3 class="card-title">Overview</h3>
+            </div>
+            <div class="card-body">
+              <p>This documentation provides details on all available API endpoints for the Multi-Tenant SaaS Platform. The base URL for all API requests is:</p>
+              <div class="alert alert-info">
+                <code>http://localhost:5001/api/v1</code>
+              </div>
+              <p>All requests except authentication endpoints require a valid JWT token in the Authorization header:</p>
+              <div class="alert alert-success">
+                <code>Authorization: Bearer your_jwt_token_here</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Authentication Module -->
+          <div class="card mb-4" id="authentication">
+            <div class="card-header">
+              <h3 class="card-title">Authentication Module</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table api-table">
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Method</th>
+                      <th>Description</th>
+                      <th>Request Body</th>
+                      <th>Example</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>/auth/login</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Authenticate a user and get a JWT token</td>
+                      <td>
+                        <pre>{
+  "email": "string",
+  "password": "string",
+  "subdomain": "string" (optional)
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "Admin123!"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/auth/refresh-token</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Refresh an expired JWT token</td>
+                      <td>
+                        <pre>{
+  "refreshToken": "string"
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/auth/refresh-token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "your_refresh_token_here"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/auth/logout</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Log out a user</td>
+                      <td>None</td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/auth/logout \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/auth/forgot-password</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Request a password reset</td>
+                      <td>
+                        <pre>{
+  "email": "string",
+  "subdomain": "string" (optional)
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/auth/reset-password/:token</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Reset password using a token</td>
+                      <td>
+                        <pre>{
+  "password": "string",
+  "subdomain": "string" (optional)
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/auth/reset-password/your_reset_token_here \
+  -H "Content-Type: application/json" \
+  -d '{
+    "password": "NewPassword123!"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Management Module -->
+          <div class="card mb-4" id="users">
+            <div class="card-header">
+              <h3 class="card-title">User Management Module</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table api-table">
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Method</th>
+                      <th>Description</th>
+                      <th>Request Body/Params</th>
+                      <th>Example</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>/users</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Create a new user</td>
+                      <td>
+                        <pre>{
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "password": "string",
+  "userType": "string",
+  "tenantId": "string" (optional)
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/users \
+  -H "Authorization: Bearer your_jwt_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "password": "Password123!",
+    "userType": "tenant_user",
+    "tenantId": "tenant_id_here"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/users</code></td>
+                      <td><span class="badge method-badge method-get">GET</span></td>
+                      <td>Get all users</td>
+                      <td>
+                        Query params:
+                        <ul>
+                          <li><code>page</code>: Page number (default: 1)</li>
+                          <li><code>limit</code>: Items per page (default: 10)</li>
+                          <li><code>userType</code>: Filter by user type</li>
+                          <li><code>tenantId</code>: Filter by tenant ID</li>
+                        </ul>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X GET "http://localhost:5001/api/v1/users?page=1&limit=10&userType=tenant_admin" \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/users/me</code></td>
+                      <td><span class="badge method-badge method-get">GET</span></td>
+                      <td>Get current user profile</td>
+                      <td>None</td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X GET http://localhost:5001/api/v1/users/me \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/users/:id</code></td>
+                      <td><span class="badge method-badge method-get">GET</span></td>
+                      <td>Get user by ID</td>
+                      <td>Path param: <code>id</code></td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X GET http://localhost:5001/api/v1/users/user_id_here \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/users/:id</code></td>
+                      <td><span class="badge method-badge method-put">PUT</span></td>
+                      <td>Update a user</td>
+                      <td>
+                        <pre>{
+  "firstName": "string",
+  "lastName": "string",
+  "isActive": boolean
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X PUT http://localhost:5001/api/v1/users/user_id_here \
+  -H "Authorization: Bearer your_jwt_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Smith",
+    "isActive": true
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/users/assign-role</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Assign a role to a user</td>
+                      <td>
+                        <pre>{
+  "userId": "string",
+  "roleId": "string"
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/users/assign-role \
+  -H "Authorization: Bearer your_jwt_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user_id_here",
+    "roleId": "role_id_here"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/users/remove-role</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Remove a role from a user</td>
+                      <td>
+                        <pre>{
+  "userId": "string",
+  "roleId": "string"
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/users/remove-role \
+  -H "Authorization: Bearer your_jwt_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user_id_here",
+    "roleId": "role_id_here"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role Management Module -->
+          <div class="card mb-4" id="roles">
+            <div class="card-header">
+              <h3 class="card-title">Role Management Module</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table api-table">
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Method</th>
+                      <th>Description</th>
+                      <th>Request Body/Params</th>
+                      <th>Example</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>/roles</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Create a new role</td>
+                      <td>
+                        <pre>{
+  "name": "string",
+  "description": "string",
+  "permissions": ["string"],
+  "tenantId": "string" (optional)
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X POST http://localhost:5001/api/v1/roles \
+  -H "Authorization: Bearer your_jwt_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Content Manager",
+    "description": "Can manage content",
+    "permissions": ["permission_id1", "permission_id2"],
+    "tenantId": "tenant_id_here"
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/roles</code></td>
+                      <td><span class="badge method-badge method-get">GET</span></td>
+                      <td>Get all roles</td>
+                      <td>
+                        Query param:
+                        <ul>
+                          <li><code>tenantId</code>: Filter by tenant ID</li>
+                        </ul>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X GET "http://localhost:5001/api/v1/roles?tenantId=tenant_id_here" \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/roles/:id</code></td>
+                      <td><span class="badge method-badge method-get">GET</span></td>
+                      <td>Get role by ID</td>
+                      <td>Path param: <code>id</code></td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X GET http://localhost:5001/api/v1/roles/role_id_here \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/roles/:id</code></td>
+                      <td><span class="badge method-badge method-put">PUT</span></td>
+                      <td>Update a role</td>
+                      <td>
+                        <pre>{
+  "name": "string",
+  "description": "string",
+  "permissions": ["string"]
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X PUT http://localhost:5001/api/v1/roles/role_id_here \
+  -H "Authorization: Bearer your_jwt_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Advanced Content Manager",
+    "description": "Can manage all content",
+    "permissions": ["permission_id1", "permission_id2", "permission_id3"]
+  }'</pre>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>/roles/:id</code></td>
+                      <td><span class="badge method-badge method-delete">DELETE</span></td>
+                      <td>Delete a role</td>
+                      <td>Path param: <code>id</code></td>
+                      <td>
+                        <div class="curl-example">
+                          <pre>curl -X DELETE http://localhost:5001/api/v1/roles/role_id_here \
+  -H "Authorization: Bearer your_jwt_token_here"</pre>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tenant Management Module -->
+          <div class="card mb-4" id="tenants">
+            <div class="card-header">
+              <h3 class="card-title">Tenant Management Module</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table api-table">
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Method</th>
+                      <th>Description</th>
+                      <th>Request Body/Params</th>
+                      <th>Example</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>/tenants</code></td>
+                      <td><span class="badge method-badge method-post">POST</span></td>
+                      <td>Create a new tenant</td>
+                      <td>
+                        <pre>{
+  "name": "string",
+  "subdomain": "string",
+  "plan": "string",
+  "contactEmail": "string",
+  "contactPhone": "string",
+  "address": {
+    "street": "string",
+    "city": "string",
+    "state": "string",
+    "zipCode": "string",
+    "country": "string"
+  },
+  "adminEmail": "string",
+  "adminFirstName": "string",
+  "adminLastName": "string",
+  "adminPassword": "string"
+}</pre>
+                      </td>
+                      <td>
+                        <div class="curl-example">
+                            <pre>curl -X POST http://localhost:5001/api/v1/tenants \
+    -H "Authorization: Bearer your_jwt_token_here" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "name": "Acme Corp",
+      "subdomain": "acme",
+      "plan": "professional",
+      "contactEmail": "admin@acme.com",
+      "contactPhone": "123-456-7890",
+      "address": {
+        "street": "123 Main St",
+        "city": "Boston",
+        "state": "MA",
+        "zipCode": "02110",
+        "country": "USA"
+      },
+      "adminEmail": "admin@acme.com",
+      "adminFirstName": "John",
+      "adminLastName": "Doe",
+      "adminPassword": "Admin123!"
+    }'</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get all tenants</td>
+                        <td>
+                          Query params:
+                          <ul>
+                            <li><code>page</code>: Page number (default: 1)</li>
+                            <li><code>limit</code>: Items per page (default: 10)</li>
+                            <li><code>search</code>: Search term</li>
+                            <li><code>plan</code>: Filter by plan</li>
+                            <li><code>isActive</code>: Filter by active status</li>
+                          </ul>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET "http://localhost:5001/api/v1/tenants?page=1&limit=10&plan=professional&isActive=true" \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get tenant by ID</td>
+                        <td>Path param: <code>id</code></td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/tenants/tenant_id_here \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id</code></td>
+                        <td><span class="badge method-badge method-patch">PATCH</span></td>
+                        <td>Update a tenant</td>
+                        <td>
+                          <pre>{
+    "name": "string",
+    "plan": "string",
+    "contactEmail": "string",
+    "isActive": boolean
+  }</pre>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X PATCH http://localhost:5001/api/v1/tenants/tenant_id_here \
+    -H "Authorization: Bearer your_jwt_token_here" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "name": "Acme Corporation",
+      "plan": "enterprise",
+      "contactEmail": "newemail@acme.com"
+    }'</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id/suspend</code></td>
+                        <td><span class="badge method-badge method-post">POST</span></td>
+                        <td>Suspend a tenant</td>
+                        <td>
+                          <pre>{
+    "reason": "string"
+  }</pre>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X POST http://localhost:5001/api/v1/tenants/tenant_id_here/suspend \
+    -H "Authorization: Bearer your_jwt_token_here" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "reason": "Payment overdue"
+    }'</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id/restore</code></td>
+                        <td><span class="badge method-badge method-post">POST</span></td>
+                        <td>Restore a suspended tenant</td>
+                        <td>None</td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X POST http://localhost:5001/api/v1/tenants/tenant_id_here/restore \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id</code></td>
+                        <td><span class="badge method-badge method-delete">DELETE</span></td>
+                        <td>Delete a tenant (soft delete)</td>
+                        <td>Path param: <code>id</code></td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X DELETE http://localhost:5001/api/v1/tenants/tenant_id_here \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id/metrics</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get tenant metrics</td>
+                        <td>Path param: <code>id</code></td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/tenants/tenant_id_here/metrics \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id/usage</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get tenant usage</td>
+                        <td>Path param: <code>id</code></td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/tenants/tenant_id_here/usage \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/:id/limits</code></td>
+                        <td><span class="badge method-badge method-patch">PATCH</span></td>
+                        <td>Update tenant limits</td>
+                        <td>
+                          <pre>{
+    "hasCustomLimits": boolean,
+    "userLimit": number,
+    "storageLimit": number,
+    "apiCallsLimit": number
+  }</pre>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X PATCH http://localhost:5001/api/v1/tenants/tenant_id_here/limits \
+    -H "Authorization: Bearer your_jwt_token_here" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "hasCustomLimits": true,
+      "userLimit": 50,
+      "storageLimit": 20,
+      "apiCallsLimit": 50000
+    }'</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/tenants/plans</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get available tenant plans</td>
+                        <td>None</td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/tenants/plans \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Permission Module -->
+            <div class="card mb-4" id="permissions">
+              <div class="card-header">
+                <h3 class="card-title">Permission Module</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-vcenter card-table api-table">
+                    <thead>
+                      <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Description</th>
+                        <th>Request Body/Params</th>
+                        <th>Example</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>/permissions</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get all permissions</td>
+                        <td>
+                          Query param:
+                          <ul>
+                            <li><code>module</code>: Filter by module</li>
+                          </ul>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET "http://localhost:5001/api/v1/permissions?module=USER" \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Audit Logs Module -->
+            <div class="card mb-4" id="audit-logs">
+              <div class="card-header">
+                <h3 class="card-title">Audit Logs Module</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-vcenter card-table api-table">
+                    <thead>
+                      <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Description</th>
+                        <th>Request Body/Params</th>
+                        <th>Example</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>/audit-logs</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get audit logs</td>
+                        <td>
+                          Query params:
+                          <ul>
+                            <li><code>page</code>: Page number (default: 1)</li>
+                            <li><code>limit</code>: Items per page (default: 15)</li>
+                            <li><code>search</code>: Search term</li>
+                            <li><code>action</code>: Filter by action</li>
+                            <li><code>module</code>: Filter by module</li>
+                            <li><code>startDate</code>: Filter from date</li>
+                            <li><code>endDate</code>: Filter to date</li>
+                            <li><code>userId</code>: Filter by user ID</li>
+                            <li><code>tenantId</code>: Filter by tenant ID</li>
+                          </ul>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET "http://localhost:5001/api/v1/audit-logs?page=1&limit=20&module=AUTH&action=LOGIN" \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/audit-logs/export</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Export audit logs as CSV</td>
+                        <td>
+                          Same query params as <code>/audit-logs</code>
+                        </td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET "http://localhost:5001/api/v1/audit-logs/export?module=AUTH&action=LOGIN" \
+    -H "Authorization: Bearer your_jwt_token_here" \
+    -o audit-logs.csv</pre>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Dashboard Module -->
+            <div class="card mb-4" id="dashboard">
+              <div class="card-header">
+                <h3 class="card-title">Dashboard Module</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-vcenter card-table api-table">
+                    <thead>
+                      <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Description</th>
+                        <th>Request Body/Params</th>
+                        <th>Example</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>/dashboard/metrics</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get dashboard metrics</td>
+                        <td>None</td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/dashboard/metrics \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/dashboard/system-health</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get system health metrics</td>
+                        <td>None</td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/dashboard/system-health \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/dashboard/tenant-comparison</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get tenant comparison metrics</td>
+                        <td>None</td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/dashboard/tenant-comparison \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td><code>/dashboard/security-metrics</code></td>
+                        <td><span class="badge method-badge method-get">GET</span></td>
+                        <td>Get security metrics</td>
+                        <td>None</td>
+                        <td>
+                          <div class="curl-example">
+                            <pre>curl -X GET http://localhost:5001/api/v1/dashboard/security-metrics \
+    -H "Authorization: Bearer your_jwt_token_here"</pre>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="footer footer-transparent d-print-none">
+          <div class="container-xl">
+            <div class="row text-center align-items-center flex-row-reverse">
+              <div class="col-lg-auto ms-lg-auto">
+                <ul class="list-inline list-inline-dots mb-0">
+                  <li class="list-inline-item"><a href="https://github.com/yourusername/multi-tenant-saas" target="_blank" class="link-secondary">Source code</a></li>
+                  <li class="list-inline-item"><a href="./docs.html" class="link-secondary">Documentation</a></li>
+                </ul>
+              </div>
+              <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                <ul class="list-inline list-inline-dots mb-0">
+                  <li class="list-inline-item">
+                    Copyright &copy; 2025
+                    <a href="." class="link-secondary">Multi-Tenant SaaS Platform</a>.
+                    All rights reserved.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+    <!-- Libs JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/libs/apexcharts/dist/apexcharts.min.js"></script>
+    <!-- Tabler Core -->
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              window.scrollTo({
+                top: target.offsetTop - 20,
+                behavior: 'smooth'
+              });
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+  </html>

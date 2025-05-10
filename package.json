@@ -4,14 +4,14 @@
   "description": "Identity and Access Management for Multi-tenant SaaS Platform",
   "main": "server.js",
   "scripts": {
-  "start": "node start-app.js",
-  "start:app": "node server.js",
-  "start:db": "node start-mongodb.js",
-  "dev": "nodemon start-app.js",
-  "test": "jest",
-  "seed": "node seeders/iam.seeder.js",
-  "setup:email": "node scripts/setupEmailTemplates.js"
-},
+    "start": "node start-app.js",
+    "start:app": "node server.js",
+    "start:db": "node start-mongodb.js",
+    "dev": "nodemon start-app.js",
+    "test": "jest",
+    "seed": "node seeders/iam.seeder.js",
+    "setup:email": "node scripts/setupEmailTemplates.js"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -24,6 +24,7 @@
     "mongodb": "^4.13.0",
     "mongoose": "^6.9.1",
     "morgan": "^1.10.0",
+    "nodemailer": "^7.0.3",
     "socket.io": "^4.8.1",
     "winston": "^3.8.2"
   },

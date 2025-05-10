@@ -1,21 +1,33 @@
-// File: backend/seeders/iam.seeder.js
+// File: backend/seeders/iam.seeder.standalone.js
+// Simplified version for standalone MongoDB (no replica set required)
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const Permission = require('../models/permission.model');
 const UserRole = require('../models/userRole.model');
 const { hashPassword } = require('../utils/hash');
 
+// Load environment variables
 require('dotenv').config();
 
+// Use standalone MongoDB URL as fallback
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/saas_platform';
+
+console.log(`Connecting to MongoDB at: ${MONGODB_URI.replace(/:[^:]*@/, ':****@')}`);
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
 .then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
 
 // Define modules and permissions
 const modules = [
@@ -167,7 +179,7 @@ const createUsers = async (roles) => {
     await UserRole.deleteMany({});
     
     // Create master admin
-const hashedPassword = await hashPassword('Admin123!');    
+    const hashedPassword = await hashPassword('Admin123!');    
     const masterAdmin = await User.create({
       firstName: 'Master',
       lastName: 'Admin',
@@ -199,8 +211,38 @@ const hashedPassword = await hashPassword('Admin123!');
       roleId: roles.systemAdminRole._id
     });
     
+    // Create a demo tenant admin
+    const tenantAdmin = await User.create({
+      firstName: 'Tenant',
+      lastName: 'Admin',
+      email: 'tenant@example.com',
+      password: hashedPassword,
+      userType: 'tenant_admin',
+      tenantId: new mongoose.Types.ObjectId(),  // Just a placeholder ID
+      isActive: true
+    });
+    
+    // Assign Tenant Admin role
+    await UserRole.create({
+      userId: tenantAdmin._id,
+      roleId: roles.tenantAdminRole._id,
+      tenantId: tenantAdmin.tenantId
+    });
+    
     console.log(`Created ${await User.countDocuments()} users`);
     console.log(`Created ${await UserRole.countDocuments()} user-role assignments`);
+    
+    console.log("\nUser credentials for testing:");
+    console.log("----------------------------");
+    console.log("Master Admin:");
+    console.log("  Email: admin@example.com");
+    console.log("  Password: Admin123!");
+    console.log("\nSystem Admin:");
+    console.log("  Email: system@example.com");
+    console.log("  Password: Admin123!");
+    console.log("\nTenant Admin:");
+    console.log("  Email: tenant@example.com");
+    console.log("  Password: Admin123!");
     
   } catch (err) {
     console.error('Error creating users:', err);
@@ -215,10 +257,24 @@ const runSeed = async () => {
     const roles = await createRoles(permissions);
     await createUsers(roles);
     
-    console.log('Seed completed successfully');
+    console.log('\nSeed completed successfully');
+    
+    // Close mongoose connection
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed');
+    
     process.exit(0);
   } catch (err) {
     console.error('Seed failed:', err);
+    
+    // Close mongoose connection
+    try {
+      await mongoose.connection.close();
+      console.log('MongoDB connection closed');
+    } catch (closeErr) {
+      console.error('Error closing MongoDB connection:', closeErr);
+    }
+    
     process.exit(1);
   }
 };
