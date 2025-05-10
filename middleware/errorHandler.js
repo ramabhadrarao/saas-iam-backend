@@ -3,6 +3,7 @@
  * Global error handling middleware
  */
 exports.errorHandler = (err, req, res, next) => {
+  // Log error details
   console.error('Error:', err);
   
   // Check if the error has a status code, otherwise default to 500
@@ -17,6 +18,16 @@ exports.errorHandler = (err, req, res, next) => {
   // If there are validation errors, include them
   if (err.errors) {
     errorResponse.errors = err.errors;
+  }
+  
+  // Add request details in development mode
+  if (process.env.NODE_ENV === 'development') {
+    errorResponse.request = {
+      method: req.method,
+      url: req.originalUrl,
+      query: req.query,
+      body: req.body
+    };
   }
   
   res.status(statusCode).json(errorResponse);
@@ -45,6 +56,11 @@ exports.notFound = (req, res, next) => {
 
 /**
  * Async handler to simplify error handling in async routes
+ * @param {Function} fn - Async route handler
+ * @returns {Function} Express middleware
  */
 exports.asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+  Promise.resolve(fn(req, res, next)).catch((err) => {
+    console.error(`Error in ${req.method} ${req.originalUrl}:`, err);
+    next(err);
+  });

@@ -14,7 +14,7 @@ async function resetPassword() {
     console.log('Connected to MongoDB');
     
     // New password to set
-    const newPassword = 'Admin123!';
+    const newPassword = 'Nihita@1981';
     console.log(`Setting password to: ${newPassword}`);
     
     // Hash the new password

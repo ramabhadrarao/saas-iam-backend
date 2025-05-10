@@ -12,7 +12,9 @@ const userRoutes = require('./routes/user.routes');
 const roleRoutes = require('./routes/role.routes');
 const permissionRoutes = require('./routes/permission.routes');
 const auditRoutes = require('./routes/audit.routes');
-
+const socketService = require('./utils/socketService');
+const dashboardRoutes = require('./routes/dashboard.routes');
+const tenantRoutes = require('./routes/tenant.routes'); 
 const app = express();
 
 // Middleware
@@ -34,7 +36,8 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/permissions', permissionRoutes);
 app.use('/api/v1/audit-logs', auditRoutes);
-
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/tenants', tenantRoutes);
 // Error handling middleware
 app.use(errorHandler);
 

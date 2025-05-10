@@ -2,6 +2,7 @@
 const AuditLog = require('../models/auditLog.model');
 const User = require('../models/user.model');
 const Tenant = require('../models/tenant.model');
+const { createObjectCsvStringifier } = require('csv-writer');
 
 exports.getAuditLogs = async (req, res) => {
   try {
@@ -137,24 +138,24 @@ exports.exportAuditLogs = async (req, res) => {
         `${log.userId.firstName} ${log.userId.lastName}` : 
         'Unknown User';
         
+      const userEmail = log.userId ? log.userId.email : 'N/A';
       const tenantName = log.tenantId ? log.tenantId.name : 'N/A';
       
       return {
         'User': userName,
-        'Email': log.userId ? log.userId.email : 'N/A',
+        'Email': userEmail,
         'Action': log.action,
         'Module': log.module,
         'Description': log.description,
-        'IP Address': log.ipAddress,
-        'User Agent': log.userAgent,
+        'IP Address': log.ipAddress || 'N/A',
+        'User Agent': log.userAgent || 'N/A',
         'Tenant': tenantName,
         'Date/Time': new Date(log.createdAt).toISOString()
       };
     });
     
-    // Convert to CSV string
-    const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
-    const csvStringifier = createCsvStringifier({
+    // Create CSV stringifier
+    const csvStringifier = createObjectCsvStringifier({
       header: [
         { id: 'User', title: 'User' },
         { id: 'Email', title: 'Email' },
@@ -168,17 +169,20 @@ exports.exportAuditLogs = async (req, res) => {
       ]
     });
     
-    const csv = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(csvData);
+    // Generate CSV content
+    const header = csvStringifier.getHeaderString();
+    const records = csvStringifier.stringifyRecords(csvData);
+    const csv = header + records;
     
     // Set response headers
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=audit-logs-${new Date().toISOString().slice(0, 10)}.csv`);
     
     // Send CSV
-    res.send(csv);
+    res.status(200).send(csv);
     
   } catch (error) {
     console.error('Export audit logs error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
