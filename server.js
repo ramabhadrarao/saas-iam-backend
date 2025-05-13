@@ -13,13 +13,20 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const roleRoutes = require('./routes/role.routes');
 const permissionRoutes = require('./routes/permission.routes');
+const tenantRoutes = require('./routes/tenant.routes');
 const auditRoutes = require('./routes/audit.routes');
-const socketService = require('./utils/socketService');
 const dashboardRoutes = require('./routes/dashboard.routes');
-const tenantRoutes = require('./routes/tenant.routes'); 
 const ticketRoutes = require('./routes/ticket.routes');
-const scheduler = require('./utils/scheduler');
+const billingRoutes = require('./routes/billing.routes');
 const mlRoutes = require('./routes/ml.routes');
+const moduleRoutes = require('./routes/module.routes');  // Add this line
+
+// Healthcare module routes
+const doctorRoutes = require('./routes/healthcare/doctor.routes');  // Add this line
+// Import other healthcare routes as needed
+
+const socketService = require('./utils/socketService');
+const scheduler = require('./utils/scheduler');
 const { enforcePlanLimits } = require('./middleware/planEnforcement.middleware');
 
 const app = express();
@@ -44,11 +51,18 @@ async function initializeApp() {
     app.use('/api/v1/users', userRoutes);
     app.use('/api/v1/roles', roleRoutes);
     app.use('/api/v1/permissions', permissionRoutes);
+    app.use('/api/v1/tenants', tenantRoutes);
     app.use('/api/v1/audit-logs', auditRoutes);
     app.use('/api/v1/dashboard', dashboardRoutes);
-    app.use('/api/v1/tenants', tenantRoutes);
     app.use('/api/v1/tickets', ticketRoutes);
+    app.use('/api/v1/billing', billingRoutes);
     app.use('/api/v1/ml', mlRoutes);
+    app.use('/api/v1/modules', moduleRoutes);  // Add this line
+    
+    // Healthcare module routes
+    app.use('/api/v1/healthcare/doctors', doctorRoutes);  // Add this line
+    // Add other healthcare routes as needed
+    
     // Tenant plan enforcement middleware
     app.use(enforcePlanLimits);
     
@@ -64,7 +78,8 @@ async function initializeApp() {
     
     // Initialize Socket.IO
     socketService.init(server);
-     // Initialize schedulers
+    
+    // Initialize schedulers
     scheduler.initScheduler();
     
     // Handle server shutdown

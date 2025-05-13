@@ -4,6 +4,7 @@ const router = express.Router();
 const tenantController = require('../controllers/tenant.controller');
 const { authenticate, authorize,checkTenantAccess  } = require('../middleware/auth.middleware');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { check } = require('express-validator'); // Add this for validation
 
 // Tenant CRUD operations
 router.post('/', 
@@ -94,43 +95,46 @@ router.get('/plans',
 );
 
 // Get tenant modules
-router.get(
-  '/:id/modules',
-  authorize(['view_tenants']),
-  TenantController.getTenantModules
+router.get('/:id/modules',
+  authenticate,
+  authorize(['read_tenant']),
+  asyncHandler(tenantController.getTenantModules)
 );
 
 // Activate module for tenant
 router.post(
   '/:id/modules/activate',
   [
-    authorize(['manage_tenants']),
+    authenticate,
+    authorize(['manage_tenant']),
     check('moduleId', 'Module ID is required').notEmpty(),
     check('quotaLimits', 'Quota limits must be an object').optional().isObject()
   ],
-  TenantController.activateModule
+  asyncHandler(tenantController.activateModule)
 );
 
 // Deactivate module for tenant
 router.post(
   '/:id/modules/deactivate',
   [
-    authorize(['manage_tenants']),
+    authenticate,
+    authorize(['manage_tenant']),
     check('moduleId', 'Module ID is required').notEmpty(),
     check('backup', 'Backup flag must be boolean').optional().isBoolean()
   ],
-  TenantController.deactivateModule
+  asyncHandler(tenantController.deactivateModule)
 );
 
 // Update module quota for tenant
 router.put(
   '/:id/modules/quota',
   [
-    authorize(['manage_tenants']),
+    authenticate,
+    authorize(['manage_tenant']),
     check('moduleId', 'Module ID is required').notEmpty(),
     check('quotaLimits', 'Quota limits must be an object').isObject()
   ],
-  TenantController.updateModuleQuota
+  asyncHandler(tenantController.updateModuleQuota)
 );
 
 module.exports = router;
