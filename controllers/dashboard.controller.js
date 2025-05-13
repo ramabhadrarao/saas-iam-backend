@@ -87,7 +87,30 @@ exports.generateDashboardMetrics = async () => {
   
   // Get recent audit logs
   const recentAuditLogs = await getRecentAuditLogs();
+   // Get ticket statistics
+  const ticketService = require('../services/ticketService');
   
+  // Get recent tickets
+  const recentTickets = await Ticket.find()
+    .populate('tenantId', 'name')
+    .populate('assignedTo', 'firstName lastName')
+    .sort({ createdAt: -1 })
+    .limit(5);
+  
+  // Get ticket counts by status
+  const ticketsByStatus = await Ticket.aggregate([
+    { $group: {
+      _id: '$status',
+      count: { $sum: 1 }
+    }}
+  ]);
+  
+  // Get tickets needing attention (open tickets with SLA warnings or breaches)
+  const ticketsNeedingAttention = await Ticket.countDocuments({
+    status: { $nin: ['resolved', 'closed'] },
+    slaStatus: { $in: ['warning', 'breached'] }
+  });
+
   return {
     totalUsers,
     userGrowth,
@@ -100,6 +123,22 @@ exports.generateDashboardMetrics = async () => {
     userDistribution,
     roleUsage,
     recentAuditLogs,
+    ticketMetrics: {
+      byStatus: ticketsByStatus.reduce((acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      }, {}),
+      needingAttention: ticketsNeedingAttention,
+      recentTickets: recentTickets.map(ticket => ({
+        id: ticket._id,
+        title: ticket.title,
+        status: ticket.status,
+        priority: ticket.priority,
+        tenant: ticket.tenantId ? ticket.tenantId.name : 'Unknown',
+        assignedTo: ticket.assignedTo ? `${ticket.assignedTo.firstName} ${ticket.assignedTo.lastName}` : 'Unassigned',
+        createdAt: ticket.createdAt
+      }))
+    },
     timestamp: new Date()
   };
 };

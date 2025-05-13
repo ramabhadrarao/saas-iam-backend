@@ -38,7 +38,8 @@ const modules = [
   'TENANT',
   'BILLING',
   'SUPPORT',
-  'DASHBOARD'
+  'DASHBOARD',
+  'TICKET'
 ];
 
 const actions = [

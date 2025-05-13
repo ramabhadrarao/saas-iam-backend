@@ -198,6 +198,98 @@ function init(httpServer) {
   console.log('Socket.IO initialized with enhanced features');
   return io;
 }
+// File: utils/socketService.js (update with ticket-specific methods)
+
+/**
+ * Emit a tenant-specific ticket event
+ * @param {String} event - Event name
+ * @param {String} tenantId - Tenant ID
+ * @param {Object} data - Event data
+ */
+function emitTenantEvent(event, tenantId, data) {
+  if (!io) return;
+  
+  // Emit to the tenant room
+  io.to(`tenant-${tenantId}`).emit(event, data);
+  
+  // Log for debugging
+  console.log(`Emitted ${event} to tenant ${tenantId}`);
+}
+
+/**
+ * Emit a support-specific ticket event
+ * @param {String} event - Event name
+ * @param {Object} data - Event data
+ */
+function emitSupportEvent(event, data) {
+  if (!io) return;
+  
+  // Emit to the support staff room
+  io.to('support-staff').emit(event, data);
+  
+  // Log for debugging
+  console.log(`Emitted ${event} to support staff`);
+}
+
+/**
+ * Join a user to the appropriate ticket rooms
+ * @param {String} socketId - Socket ID
+ * @param {Object} user - User object
+ */
+function setupTicketRooms(socketId, user) {
+  if (!io) return;
+  
+  const socket = io.sockets.sockets.get(socketId);
+  if (!socket) return;
+  
+  // If user is a master admin, add to support staff room
+  if (user.userType === 'master_admin') {
+    socket.join('support-staff');
+    console.log(`Socket ${socketId} joined support-staff room`);
+  }
+  
+  // If user has a tenant, add to tenant room
+  if (user.tenantId) {
+    socket.join(`tenant-${user.tenantId}`);
+    console.log(`Socket ${socketId} joined tenant-${user.tenantId} room`);
+  }
+}
+
+// Update the existing setupSocketAuth function
+function setupSocketAuth(socket) {
+  // Handle authentication
+  socket.on('authenticate', async (token) => {
+    try {
+      // Verify JWT token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Store user info on socket
+      socket.user = {
+        id: decoded.id,
+        email: decoded.email,
+        userType: decoded.userType,
+        tenantId: decoded.tenantId
+      };
+      
+      // Add socket to authenticated room
+      socket.join('authenticated');
+      
+      // Setup ticket-specific rooms
+      setupTicketRooms(socket.id, socket.user);
+      
+      // Emit successful authentication
+      socket.emit('authenticated', { status: 'success' });
+      
+      console.log(`Socket ${socket.id} authenticated for user ${decoded.email}`);
+    } catch (error) {
+      console.error('Socket authentication error:', error);
+      socket.emit('authenticated', { status: 'error', message: 'Invalid token' });
+    }
+  });
+}
+
+
+
 module.exports = {
   init,
   getIO,
@@ -208,5 +300,8 @@ module.exports = {
   emitTenantUpdate,
   joinTenantRoom,
   emitSecurityAlert,
-  setupSocketAuth
+  setupSocketAuth,
+   emitTenantEvent,
+  emitSupportEvent,
+  setupTicketRooms
 };

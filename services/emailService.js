@@ -282,7 +282,30 @@ class EmailService {
       }
     });
   }
+
+/**
+ * Send a ticket notification
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email address
+ * @param {string} options.subject - Email subject
+ * @param {string} options.templateName - Template name
+ * @param {Object} options.templateData - Data to pass to the template
+ */
+  async sendTicketNotification(options) {
+    return this.sendTemplateEmail({
+      ...options,
+      templateData: {
+        ...options.templateData,
+        year: new Date().getFullYear()
+      }
+    });
+  }
+
+
+
 }
+
+
 
 // Create and export a singleton instance
 const emailService = new EmailService();

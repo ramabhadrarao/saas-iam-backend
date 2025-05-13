@@ -17,6 +17,9 @@ const auditRoutes = require('./routes/audit.routes');
 const socketService = require('./utils/socketService');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const tenantRoutes = require('./routes/tenant.routes'); 
+const ticketRoutes = require('./routes/ticket.routes');
+const scheduler = require('./utils/scheduler');
+const mlRoutes = require('./routes/ml.routes');
 const { enforcePlanLimits } = require('./middleware/planEnforcement.middleware');
 
 const app = express();
@@ -44,7 +47,8 @@ async function initializeApp() {
     app.use('/api/v1/audit-logs', auditRoutes);
     app.use('/api/v1/dashboard', dashboardRoutes);
     app.use('/api/v1/tenants', tenantRoutes);
-    
+    app.use('/api/v1/tickets', ticketRoutes);
+    app.use('/api/v1/ml', mlRoutes);
     // Tenant plan enforcement middleware
     app.use(enforcePlanLimits);
     
@@ -60,6 +64,8 @@ async function initializeApp() {
     
     // Initialize Socket.IO
     socketService.init(server);
+     // Initialize schedulers
+    scheduler.initScheduler();
     
     // Handle server shutdown
     process.on('SIGINT', async () => {

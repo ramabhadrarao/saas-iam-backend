@@ -251,6 +251,46 @@ class TenantDbInitializer {
       }
     }, { timestamps: true });
     
+    // Ticket reference model for tenant database
+    const ticketReferenceSchema = new mongoose.Schema({
+      // Reference to master ticket
+      masterTicketId: {
+        type: String,
+        required: true,
+        index: true
+      },
+      title: {
+        type: String,
+        required: true
+      },
+      status: {
+        type: String,
+        enum: ['open', 'in_progress', 'pending', 'resolved', 'closed'],
+        default: 'open'
+      },
+      priority: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'critical'],
+        default: 'medium'
+      },
+      category: String,
+      createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      lastUpdated: {
+        type: Date,
+        default: Date.now
+      },
+      unreadCount: {
+        type: Number,
+        default: 0
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }, { timestamps: true });
     // Register models on the connection
     connection.model('User', userSchema);
     connection.model('Permission', permissionSchema);
@@ -258,6 +298,8 @@ class TenantDbInitializer {
     connection.model('UserRole', userRoleSchema);
     connection.model('AuditLog', auditLogSchema);
     connection.model('Settings', settingsSchema);
+    // Register on tenant connection
+    connection.model('TicketReference', ticketReferenceSchema);
   }
   
   /**
