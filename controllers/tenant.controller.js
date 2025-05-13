@@ -10,6 +10,7 @@ const DbConnectionManager = require('../services/dbConnectionManager');
 const TenantDbInitializer = require('../services/tenantDbInitializer');
 const { AppError } = require('../middleware/errorHandler');
 const emailService = require('../services/emailService');
+
 /**
  * Create a new tenant
  */

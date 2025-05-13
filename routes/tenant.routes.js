@@ -92,4 +92,45 @@ router.get('/plans',
   authenticate, 
   asyncHandler(tenantController.getTenantPlans)
 );
+
+// Get tenant modules
+router.get(
+  '/:id/modules',
+  authorize(['view_tenants']),
+  TenantController.getTenantModules
+);
+
+// Activate module for tenant
+router.post(
+  '/:id/modules/activate',
+  [
+    authorize(['manage_tenants']),
+    check('moduleId', 'Module ID is required').notEmpty(),
+    check('quotaLimits', 'Quota limits must be an object').optional().isObject()
+  ],
+  TenantController.activateModule
+);
+
+// Deactivate module for tenant
+router.post(
+  '/:id/modules/deactivate',
+  [
+    authorize(['manage_tenants']),
+    check('moduleId', 'Module ID is required').notEmpty(),
+    check('backup', 'Backup flag must be boolean').optional().isBoolean()
+  ],
+  TenantController.deactivateModule
+);
+
+// Update module quota for tenant
+router.put(
+  '/:id/modules/quota',
+  [
+    authorize(['manage_tenants']),
+    check('moduleId', 'Module ID is required').notEmpty(),
+    check('quotaLimits', 'Quota limits must be an object').isObject()
+  ],
+  TenantController.updateModuleQuota
+);
+
 module.exports = router;
