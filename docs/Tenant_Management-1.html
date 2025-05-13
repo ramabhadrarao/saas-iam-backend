@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenant Management API Documentation</title>
+  <!-- Tabler CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler/1.0.0-beta17/css/tabler.min.css">
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/1.35.0/iconfont/tabler-icons.min.css">
+  <style>
+    .code-block {
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+      font-family: monospace;
+      white-space: pre;
+    }
+    .endpoint {
+      background-color: #e0f2fe;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-family: monospace;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .method {
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      color: white;
+    }
+    .get {
+      background-color: #0ea5e9;
+    }
+    .post {
+      background-color: #22c55e;
+    }
+    .put, .patch {
+      background-color: #f97316;
+    }
+    .delete {
+      background-color: #ef4444;
+    }
+    .auth-required {
+      color: #dc2626;
+      font-weight: bold;
+    }
+    .response {
+      background-color: #f8fafc;
+      border-left: 4px solid #0ea5e9;
+    }
+    .request {
+      background-color: #f8fafc;
+      border-left: 4px solid #22c55e;
+    }
+    h3 {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container-xl">
+      <div class="row">
+        <div class="col-12">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h1 class="card-title">Tenant Management API Documentation</h1>
+            </div>
+            <div class="card-body">
+              <p class="lead">This documentation provides a comprehensive guide to the Tenant Management API endpoints, with examples using curl and the expected request/response formats.</p>
+
+              <div class="alert alert-info">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-info-circle icon me-2"></i>
+                  </div>
+                  <div>
+                    <h4>Authentication</h4>
+                    <p>
+                      All API endpoints require a valid JWT token in the <code>Authorization</code> header as <code>Bearer &lt;token&gt;</code>. 
+                      To obtain a JWT token, use the <code>/api/v1/auth/login</code> endpoint with valid credentials.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-warning">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-alert-triangle icon me-2"></i>
+                  </div>
+                  <div>
+                    <h4>Authorization</h4>
+                    <p>
+                      Many endpoints require specific permissions. Users must have the appropriate role with necessary permissions to access these endpoints.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="mt-4">1. Create a New Tenant</h2>
+              <p>Creates a new tenant with a dedicated database and optionally creates an admin user for the tenant.</p>
+
+              <div class="endpoint">
+                <span class="method post">POST</span>
+                /api/v1/tenants
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>create_tenant</code> permission</li>
+              </ul>
+
+              <h4>Request Body</h4>
+              <div class="code-block request">
+{
+  "name": "Sample Company",
+  "subdomain": "sample",
+  "plan": "professional",
+  "contactEmail": "contact@samplecompany.com",
+  "contactPhone": "+91 9876543210",
+  "address": {
+    "street": "123 Business Park",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "zipCode": "500032",
+    "country": "India"
+  },
+  "adminEmail": "admin@samplecompany.com",
+  "adminFirstName": "John",
+  "adminLastName": "Doe",
+  "adminPassword": "SecurePassword123!"
+}</div>
+
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Field</th>
+                      <th>Type</th>
+                      <th>Required</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>name</code></td>
+                      <td>String</td>
+                      <td>Yes</td>
+                      <td>Display name of the tenant</td>
+                    </tr>
+                    <tr>
+                      <td><code>subdomain</code></td>
+                      <td>String</td>
+                      <td>Yes</td>
+                      <td>Unique subdomain for the tenant (alphanumeric, hyphens allowed, no spaces)</td>
+                    </tr>
+                    <tr>
+                      <td><code>plan</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>Subscription plan (free, starter, professional, enterprise). Defaults to "free"</td>
+                    </tr>
+                    <tr>
+                      <td><code>contactEmail</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>Primary contact email for the tenant</td>
+                    </tr>
+                    <tr>
+                      <td><code>contactPhone</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>Contact phone number</td>
+                    </tr>
+                    <tr>
+                      <td><code>address</code></td>
+                      <td>Object</td>
+                      <td>No</td>
+                      <td>Physical address information</td>
+                    </tr>
+                    <tr>
+                      <td><code>adminEmail</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>Email for the tenant admin user (if creating one)</td>
+                    </tr>
+                    <tr>
+                      <td><code>adminFirstName</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>First name for the tenant admin</td>
+                    </tr>
+                    <tr>
+                      <td><code>adminLastName</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>Last name for the tenant admin</td>
+                    </tr>
+                    <tr>
+                      <td><code>adminPassword</code></td>
+                      <td>String</td>
+                      <td>No</td>
+                      <td>Password for the tenant admin</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (201 Created)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant created successfully",
+  "tenant": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "domain": "sample.example.com",
+    "plan": "professional",
+    "isActive": true,
+    "createdAt": "2023-07-15T12:00:00.000Z"
+  }
+}</div>
+
+              <h4>Error Responses</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Status Code</th>
+                      <th>Error Message</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>400</td>
+                      <td>"Tenant with this subdomain already exists"</td>
+                      <td>The subdomain is already in use by another tenant</td>
+                    </tr>
+                    <tr>
+                      <td>400</td>
+                      <td>"User with this email already exists"</td>
+                      <td>The admin email is already in use by another user</td>
+                    </tr>
+                    <tr>
+                      <td>401</td>
+                      <td>"Authentication required"</td>
+                      <td>No valid JWT token provided</td>
+                    </tr>
+                    <tr>
+                      <td>403</td>
+                      <td>"Permission denied"</td>
+                      <td>User lacks the create_tenant permission</td>
+                    </tr>
+                    <tr>
+                      <td>500</td>
+                      <td>"Internal server error"</td>
+                      <td>Server-side error occurred</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X POST \
+  http://localhost:5001/api/v1/tenants \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' \
+  -d '{
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "plan": "professional",
+    "contactEmail": "contact@samplecompany.com",
+    "contactPhone": "+91 9876543210",
+    "address": {
+      "street": "123 Business Park",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "zipCode": "500032",
+      "country": "India"
+    },
+    "adminEmail": "admin@samplecompany.com",
+    "adminFirstName": "John",
+    "adminLastName": "Doe",
+    "adminPassword": "SecurePassword123!"
+  }'</div>
+
+              <h4>Behind the Scenes</h4>
+              <div class="card">
+                <div class="card-body">
+                  <p>When creating a new tenant, the following operations are performed:</p>
+                  <ol>
+                    <li>Validation of input data</li>
+                    <li>Creation of a new tenant record in the master database</li>
+                    <li>Creation of a dedicated MongoDB database for the tenant (named <code>tenant_[subdomain]</code>)</li>
+                    <li>Initialization of the tenant database with necessary schemas and models</li>
+                    <li>Creation of default permissions, roles, and settings</li>
+                    <li>If admin info is provided, creation of an admin user in both the tenant database and master database</li>
+                    <li>Sending a welcome email to the tenant admin</li>
+                    <li>Logging the tenant creation in the audit log</li>
+                  </ol>
+                </div>
+              </div>
+
+              <h2 class="mt-5">2. List All Tenants</h2>
+              <p>Retrieves a paginated list of tenants with optional filtering.</p>
+
+              <div class="endpoint">
+                <span class="method get">GET</span>
+                /api/v1/tenants
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>read_tenant</code> permission</li>
+              </ul>
+
+              <h4>Query Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Default</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>page</code></td>
+                      <td>Number</td>
+                      <td>1</td>
+                      <td>Page number for pagination</td>
+                    </tr>
+                    <tr>
+                      <td><code>limit</code></td>
+                      <td>Number</td>
+                      <td>10</td>
+                      <td>Number of items per page</td>
+                    </tr>
+                    <tr>
+                      <td><code>search</code></td>
+                      <td>String</td>
+                      <td>-</td>
+                      <td>Search term to filter tenants by name, subdomain, or email</td>
+                    </tr>
+                    <tr>
+                      <td><code>plan</code></td>
+                      <td>String</td>
+                      <td>-</td>
+                      <td>Filter by subscription plan</td>
+                    </tr>
+                    <tr>
+                      <td><code>isActive</code></td>
+                      <td>Boolean</td>
+                      <td>-</td>
+                      <td>Filter by active status (true/false)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "tenants": [
+    {
+      "_id": "60d21b4667d0d8992e610c85",
+      "name": "Sample Company",
+      "subdomain": "sample",
+      "isActive": true,
+      "plan": "professional",
+      "contactEmail": "contact@samplecompany.com",
+      "contactPhone": "+91 9876543210",
+      "address": {
+        "street": "123 Business Park",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "zipCode": "500032",
+        "country": "India"
+      },
+      "createdBy": {
+        "_id": "60d21b1c67d0d8992e610c84",
+        "firstName": "Admin",
+        "lastName": "User",
+        "email": "admin@example.com"
+      },
+      "createdAt": "2023-07-15T12:00:00.000Z",
+      "updatedAt": "2023-07-15T12:00:00.000Z"
+    },
+    // Additional tenants...
+  ],
+  "pagination": {
+    "total": 50,
+    "page": 1,
+    "limit": 10,
+    "pages": 5
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X GET \
+  'http://localhost:5001/api/v1/tenants?page=1&limit=10&search=sample&plan=professional&isActive=true' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Important Notes:</p>
+                  <ul>
+                    <li>For tenant admins and users, this endpoint only returns their own tenant</li>
+                    <li>Master admins can see all tenants in the system</li>
+                    <li>The result includes the user who created each tenant</li>
+                  </ul>
+                </div>
+              </div>
+
+              <h2 class="mt-5">3. Get Tenant by ID</h2>
+              <p>Retrieves detailed information about a specific tenant by its ID.</p>
+
+              <div class="endpoint">
+                <span class="method get">GET</span>
+                /api/v1/tenants/:id
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>read_tenant</code> permission</li>
+                <li>Tenant users can only access their own tenant</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "tenant": {
+    "_id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "domain": "sample.example.com",
+    "isActive": true,
+    "plan": "professional",
+    "contactEmail": "contact@samplecompany.com",
+    "contactPhone": "+91 9876543210",
+    "address": {
+      "street": "123 Business Park",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "zipCode": "500032",
+      "country": "India"
+    },
+    "createdBy": {
+      "_id": "60d21b1c67d0d8992e610c84",
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@example.com"
+    },
+    "createdAt": "2023-07-15T12:00:00.000Z",
+    "updatedAt": "2023-07-15T12:00:00.000Z",
+    "userCount": 15
+  }
+}</div>
+
+              <h4>Error Responses</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Status Code</th>
+                      <th>Error Message</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>404</td>
+                      <td>"Tenant not found"</td>
+                      <td>No tenant exists with the provided ID</td>
+                    </tr>
+                    <tr>
+                      <td>403</td>
+                      <td>"Access denied: You can only access your own tenant"</td>
+                      <td>A tenant user is trying to access a different tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X GET \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85 \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <h2 class="mt-5">4. Update Tenant</h2>
+              <p>Updates an existing tenant's information.</p>
+
+              <div class="endpoint">
+                <span class="method patch">PATCH</span>
+                /api/v1/tenants/:id
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>update_tenant</code> permission</li>
+                <li>Tenant users can only update their own tenant</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Request Body</h4>
+              <div class="code-block request">
+{
+  "name": "Updated Company Name",
+  "subdomain": "updated-sample",
+  "plan": "enterprise",
+  "contactEmail": "new-contact@samplecompany.com",
+  "contactPhone": "+91 8765432109",
+  "address": {
+    "street": "456 Corporate Tower",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "zipCode": "500032",
+    "country": "India"
+  },
+  "isActive": true,
+  "settings": {
+    "theme": "dark",
+    "language": "en",
+    "timeZone": "Asia/Kolkata"
+  },
+  "logo": "https://example.com/logo.png"
+}</div>
+
+              <div class="alert alert-info">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-info-circle icon me-2"></i>
+                  </div>
+                  <div>
+                    <p>All fields in the request body are optional. Only the provided fields will be updated.</p>
+                  </div>
+                </div>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant updated successfully",
+  "tenant": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Updated Company Name",
+    "subdomain": "updated-sample",
+    "domain": "updated-sample.example.com",
+    "plan": "enterprise",
+    "isActive": true,
+    "updatedAt": "2023-07-16T15:30:00.000Z"
+  }
+}</div>
+
+              <h4>Error Responses</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Status Code</th>
+                      <th>Error Message</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>404</td>
+                      <td>"Tenant not found"</td>
+                      <td>No tenant exists with the provided ID</td>
+                    </tr>
+                    <tr>
+                      <td>400</td>
+                      <td>"Subdomain is already in use"</td>
+                      <td>The requested subdomain is already taken by another tenant</td>
+                    </tr>
+                    <tr>
+                      <td>403</td>
+                      <td>"Access denied: You can only access your own tenant"</td>
+                      <td>A tenant user is trying to update a different tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X PATCH \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85 \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' \
+  -d '{
+    "name": "Updated Company Name",
+    "plan": "enterprise",
+    "contactEmail": "new-contact@samplecompany.com",
+    "settings": {
+      "theme": "dark",
+      "language": "en",
+      "timeZone": "Asia/Kolkata"
+    }
+  }'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Important Notes:</p>
+                  <ul>
+                    <li>Changing the subdomain will change the URL that tenants use to access the application</li>
+                    <li>If a tenant is deactivated (<code>isActive: false</code>), all users will be unable to log in</li>
+                    <li>Changing the plan may affect billing and available features</li>
+                    <li>Settings are tenant-specific configuration options that can be customized</li>
+                  </ul>
+                </div>
+              </div>
+
+              <h2 class="mt-5">5. Suspend Tenant</h2>
+              <p>Suspends a tenant, preventing all users from accessing it.</p>
+
+              <div class="endpoint">
+                <span class="method post">POST</span>
+                /api/v1/tenants/:id/suspend
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>manage_tenant</code> permission</li>
+                <li>Only master admins can perform this action</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Request Body (Optional)</h4>
+              <div class="code-block request">
+{
+  "reason": "Non-payment of subscription fees"
+}</div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant suspended successfully",
+  "tenant": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "isActive": false
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X POST \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/suspend \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' \
+  -d '{
+    "reason": "Non-payment of subscription fees"
+  }'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Behind the Scenes:</p>
+                  <ol>
+                    <li>The tenant's <code>isActive</code> status is set to <code>false</code></li>
+                    <li>The tenant's database connection is removed from the connection pool</li>
+                    <li>Email notifications are sent to all tenant admin users</li>
+                    <li>An audit log entry is created</li>
+                  </ol>
+                </div>
+              </div>
+
+              <h2 class="mt-5">6. Restore Tenant</h2>
+              <p>Restores a previously suspended tenant.</p>
+
+              <div class="endpoint">
+                <span class="method post">POST</span>
+                /api/v1/tenants/:id/restore
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>manage_tenant</code> permission</li>
+                <li>Only master admins can perform this action</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant restored successfully",
+  "tenant": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "isActive": true
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X POST \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/restore \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Behind the Scenes:</p>
+                  <ol>
+                    <li>The tenant's <code>isActive</code> status is set to <code>true</code></li>
+                    <li>Email notifications are sent to all tenant admin users</li>
+                    <li>An audit log entry is created</li>
+                  </ol>
+                </div>
+              </div>
+
+             </div>
+            </body>
+            </html>

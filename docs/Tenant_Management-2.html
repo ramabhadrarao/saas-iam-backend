@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenant Management API Documentation (Continued)</title>
+  <!-- Tabler CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler/1.0.0-beta17/css/tabler.min.css">
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/1.35.0/iconfont/tabler-icons.min.css">
+  <style>
+    .code-block {
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+      font-family: monospace;
+      white-space: pre;
+    }
+    .endpoint {
+      background-color: #e0f2fe;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-family: monospace;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .method {
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      color: white;
+    }
+    .get {
+      background-color: #0ea5e9;
+    }
+    .post {
+      background-color: #22c55e;
+    }
+    .put, .patch {
+      background-color: #f97316;
+    }
+    .delete {
+      background-color: #ef4444;
+    }
+    .auth-required {
+      color: #dc2626;
+      font-weight: bold;
+    }
+    .response {
+      background-color: #f8fafc;
+      border-left: 4px solid #0ea5e9;
+    }
+    .request {
+      background-color: #f8fafc;
+      border-left: 4px solid #22c55e;
+    }
+    h3 {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container-xl">
+      <div class="row">
+        <div class="col-12">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h1 class="card-title">Tenant Management API Documentation (Continued)</h1>
+            </div>
+            <div class="card-body">
+
+              <h2 class="mt-4">7. Delete Tenant</h2>
+              <p>Permanently deletes a tenant and all associated data. This action cannot be undone.</p>
+
+              <div class="endpoint">
+                <span class="method delete">DELETE</span>
+                /api/v1/tenants/:id
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>delete_tenant</code> permission</li>
+                <li>Only master admins can perform this action</li>
+              </ul>
+
+              <div class="alert alert-danger">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-alert-circle icon me-2"></i>
+                  </div>
+                  <div>
+                    <h4>Warning: Destructive Action</h4>
+                    <p>
+                      This is a permanent action. All tenant data, including users, configurations, and application data
+                      will be permanently deleted. This action cannot be undone.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant deleted successfully"
+}</div>
+
+              <h4>Error Responses</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Status Code</th>
+                      <th>Error Message</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>404</td>
+                      <td>"Tenant not found"</td>
+                      <td>No tenant exists with the provided ID</td>
+                    </tr>
+                    <tr>
+                      <td>403</td>
+                      <td>"Not authorized to delete tenant"</td>
+                      <td>The user does not have permission to delete tenants</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X DELETE \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85 \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Behind the Scenes:</p>
+                  <ol>
+                    <li>A database transaction is started to ensure atomicity</li>
+                    <li>The tenant database connection is removed from the connection pool</li>
+                    <li>All tenant users are deleted from the master database</li>
+                    <li>All tenant role assignments are deleted from the master database</li>
+                    <li>The tenant record is deleted from the master database</li>
+                    <li>An audit log entry is created recording the deletion</li>
+                    <li>Note: The tenant database remains on the MongoDB server but is no longer accessible from the application</li>
+                  </ol>
+                </div>
+              </div>
+
+              <h2 class="mt-5">8. Get Tenant Metrics</h2>
+              <p>Retrieves usage and activity metrics for a specific tenant.</p>
+
+              <div class="endpoint">
+                <span class="method get">GET</span>
+                /api/v1/tenants/:id/metrics
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>read_tenant</code> permission</li>
+                <li>Tenant users can only access their own tenant's metrics</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "tenant": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "domain": "sample.example.com",
+    "plan": "professional",
+    "isActive": true,
+    "createdAt": "2023-07-15T12:00:00.000Z"
+  },
+  "metrics": {
+    "userStats": {
+      "total": 15,
+      "admins": 3,
+      "users": 12
+    },
+    "recentActivity": [
+      {
+        "_id": "60d21b5667d0d8992e610c86",
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@samplecompany.com",
+        "lastLogin": "2023-07-17T09:30:00.000Z"
+      },
+      {
+        "_id": "60d21b5667d0d8992e610c87",
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "email": "jane.smith@samplecompany.com",
+        "lastLogin": "2023-07-17T08:45:00.000Z"
+      }
+      // More users...
+    ]
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X GET \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/metrics \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Dashboard Insights:</p>
+                  <p>This endpoint provides useful metrics for tenant dashboard displays, including:</p>
+                  <ul>
+                    <li>User counts by role</li>
+                    <li>Recent user activity</li>
+                    <li>Basic tenant information</li>
+                  </ul>
+                  <p>For more detailed metrics, use the usage and usage-details endpoints.</p>
+                </div>
+              </div>
+
+              <h2 class="mt-5">9. Get Tenant Usage</h2>
+              <p>Retrieves resource usage information for a tenant, including quota limits.</p>
+
+              <div class="endpoint">
+                <span class="method get">GET</span>
+                /api/v1/tenants/:id/usage
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>read_tenant</code> permission</li>
+                <li>Tenant users can only access their own tenant's usage</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "tenant": {
+    "_id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "subdomain": "sample",
+    "plan": "professional",
+    "planLimits": {
+      "free": {
+        "userLimit": 5,
+        "storageLimit": 1,
+        "apiCallsLimit": 1000
+      },
+      "starter": {
+        "userLimit": 20,
+        "storageLimit": 10,
+        "apiCallsLimit": 10000
+      },
+      "professional": {
+        "userLimit": 100,
+        "storageLimit": 50,
+        "apiCallsLimit": 100000
+      },
+      "enterprise": {
+        "userLimit": 500,
+        "storageLimit": 500,
+        "apiCallsLimit": 1000000
+      }
+    }
+  },
+  "usage": {
+    "users": {
+      "current": 15,
+      "limit": 100
+    },
+    "storage": {
+      "current": 0.1,
+      "limit": 50
+    },
+    "apiCalls": {
+      "current": 145,
+      "limit": 100000
+    }
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X GET \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/usage \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Resource Monitoring:</p>
+                  <p>This endpoint helps monitor tenant resource usage against their plan limits. It shows:</p>
+                  <ul>
+                    <li>Current active user count vs. allowed limit</li>
+                    <li>Storage usage (in GB) vs. storage limit</li>
+                    <li>API call usage vs. daily limit</li>
+                    <li>Plan information including limits for all plans</li>
+                  </ul>
+                </div>
+              </div>
+
+              <h2 class="mt-5">10. Update Tenant Limits</h2>
+              <p>Updates the resource limits for a specific tenant, overriding the default plan limits.</p>
+
+              <div class="endpoint">
+                <span class="method patch">PATCH</span>
+                /api/v1/tenants/:id/limits
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>manage_tenant</code> permission</li>
+                <li>Only master admins can perform this action</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Request Body</h4>
+              <div class="code-block request">
+{
+  "hasCustomLimits": true,
+  "userLimit": 150,
+  "storageLimit": 75,
+  "apiCallsLimit": 200000
+}</div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant limits updated successfully",
+  "tenant": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Sample Company",
+    "overrideLimits": {
+      "hasCustomLimits": true,
+      "userLimit": 150,
+      "storageLimit": 75,
+      "apiCallsLimit": 200000
+    }
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X PATCH \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/limits \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' \
+  -d '{
+    "hasCustomLimits": true,
+    "userLimit": 150,
+    "storageLimit": 75,
+    "apiCallsLimit": 200000
+  }'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Custom Limits:</p>
+                  <p>This endpoint allows administrators to override the default plan limits for a specific tenant:</p>
+                  <ul>
+                    <li>Set <code>hasCustomLimits: false</code> to revert to the default plan limits</li>
+                    <li>Custom limits remain in effect even if the tenant's plan changes</li>
+                    <li>This is useful for special customers who need exceptions to standard plan tiers</li>
+                  </ul>
+                </div>
+              </div>
+
+              <h2 class="mt-5">11. Get Detailed Tenant Usage</h2>
+              <p>Retrieves detailed usage metrics and historical usage data for a tenant.</p>
+
+              <div class="endpoint">
+                <span class="method get">GET</span>
+                /api/v1/tenants/:id/usage-details
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>read_tenant</code> permission</li>
+                <li>Tenant users can only access their own tenant's usage details</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "usageMetrics": {
+    "tenant": {
+      "id": "60d21b4667d0d8992e610c85",
+      "name": "Sample Company",
+      "plan": "professional",
+      "isActive": true
+    },
+    "users": {
+      "current": 15,
+      "limit": 100,
+      "percentage": 15
+    },
+    "storage": {
+      "current": 104857600,
+      "limit": 53687091200,
+      "percentage": 0.2,
+      "formattedCurrent": "100 MB",
+      "formattedLimit": "50 GB"
+    },
+    "apiCalls": {
+      "current": 1450,
+      "limit": 100000,
+      "percentage": 1.45
+    }
+  },
+  "historicalData": {
+    "apiCallsByDay": [
+      {
+        "_id": "2023-06-15",
+        "count": 52
+      },
+      {
+        "_id": "2023-06-16",
+        "count": 87
+      },
+      // More days...
+    ],
+    "userGrowth": [
+      {
+        "_id": "2023-06-10",
+        "count": 1
+      },
+      {
+        "_id": "2023-06-12",
+        "count": 3
+      },
+      // More days...
+    ]
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X GET \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/usage-details \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Detailed Analytics:</p>
+                  <p>This endpoint provides rich data for analytics dashboards:</p>
+                  <ul>
+                    <li>Current usage metrics with percentage utilization</li>
+                    <li>Historical API call trends (30-day history)</li>
+                    <li>User growth over time</li>
+                    <li>Human-readable formatted sizes for storage</li>
+                  </ul>
+                </div>
+              </div>
+
+              <h2 class="mt-5">12. Update Tenant Settings</h2>
+              <p>Updates tenant-specific settings and configurations.</p>
+
+              <div class="endpoint">
+                <span class="method patch">PATCH</span>
+                /api/v1/tenants/:id/settings
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>User must have the <code>update_tenant</code> permission</li>
+                <li>Tenant users can only update their own tenant's settings</li>
+              </ul>
+
+              <h4>Path Parameters</h4>
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>id</code></td>
+                      <td>String</td>
+                      <td>The MongoDB ID of the tenant</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4>Request Body</h4>
+              <div class="code-block request">
+{
+  "settings": {
+    "theme": "dark",
+    "language": "en",
+    "timeZone": "Asia/Kolkata",
+    "dateFormat": "DD/MM/YYYY",
+    "defaultCurrency": "INR",
+    "emailNotifications": {
+      "dailyDigest": true,
+      "securityAlerts": true,
+      "billingNotices": true
+    },
+    "customLogo": "https://example.com/logo.png",
+    "customColors": {
+      "primary": "#4f46e5",
+      "secondary": "#10b981"
+    }
+  }
+}</div>
+
+              <div class="alert alert-info">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-info-circle icon me-2"></i>
+                  </div>
+                  <div>
+                    <p>The settings object is flexible and can contain any key-value pairs needed for tenant configuration. The platform doesn't enforce a specific schema for tenant settings.</p>
+                  </div>
+                </div>
+              </div>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "message": "Tenant settings updated successfully",
+  "settings": {
+    "theme": "dark",
+    "language": "en",
+    "timeZone": "Asia/Kolkata",
+    "dateFormat": "DD/MM/YYYY",
+    "defaultCurrency": "INR",
+    "emailNotifications": {
+      "dailyDigest": true,
+      "securityAlerts": true,
+      "billingNotices": true
+    },
+    "customLogo": "https://example.com/logo.png",
+    "customColors": {
+      "primary": "#4f46e5",
+      "secondary": "#10b981"
+    }
+  }
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X PATCH \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/settings \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' \
+  -d '{
+    "settings": {
+      "theme": "dark",
+      "language": "en",
+      "timeZone": "Asia/Kolkata",
+      "dateFormat": "DD/MM/YYYY",
+      "defaultCurrency": "INR",
+      "emailNotifications": {
+        "dailyDigest": true,
+        "securityAlerts": true,
+        "billingNotices": true
+      }
+    }
+  }'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Behind the Scenes:</p>
+                  <ol>
+                    <li>Settings are stored in the tenant record in the master database</li>
+                    <li>Settings are also synchronized to the tenant-specific database</li>
+                    <li>The tenant's frontend application uses these settings for customization</li>
+                    <li>Changes take effect immediately for all tenant users</li>
+                  </ol>
+                </div>
+              </div>
+
+              <h2 class="mt-5">13. Get Available Tenant Plans</h2>
+              <p>Retrieves a list of available subscription plans for tenants.</p>
+
+              <div class="endpoint">
+                <span class="method get">GET</span>
+                /api/v1/tenants/plans
+              </div>
+
+              <h4>Authentication Required</h4>
+              <ul>
+                <li>Valid JWT token</li>
+                <li>Available to all authenticated users</li>
+              </ul>
+
+              <h4>Response (200 OK)</h4>
+              <div class="code-block response">
+{
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "description": "Basic plan for small teams",
+      "price": 0,
+      "features": [
+        { "name": "Users", "value": "5 users" },
+        { "name": "Storage", "value": "1 GB" },
+        { "name": "API Calls", "value": "1,000 per day" }
+      ]
+    },
+    {
+      "id": "starter",
+      "name": "Starter",
+      "description": "For growing teams",
+      "price": 49,
+      "features": [
+        { "name": "Users", "value": "20 users" },
+        { "name": "Storage", "value": "10 GB" },
+        { "name": "API Calls", "value": "10,000 per day" },
+        { "name": "Priority Support", "value": "Email support" }
+      ]
+    },
+    {
+      "id": "professional",
+      "name": "Professional",
+      "description": "For established businesses",
+      "price": 199,
+      "features": [
+        { "name": "Users", "value": "100 users" },
+        { "name": "Storage", "value": "50 GB" },
+        { "name": "API Calls", "value": "100,000 per day" },
+        { "name": "Priority Support", "value": "Email & phone support" },
+        { "name": "Advanced Analytics", "value": "Included" }
+      ]
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "description": "For large organizations",
+      "price": 499,
+      "features": [
+        { "name": "Users", "value": "500 users" },
+        { "name": "Storage", "value": "500 GB" },
+        { "name": "API Calls", "value": "1,000,000 per day" },
+        { "name": "Priority Support", "value": "Dedicated support manager" },
+        { "name": "Advanced Analytics", "value": "Included" },
+        { "name": "Custom Integrations", "value": "Included" }
+      ]
+    }
+  ]
+}</div>
+
+              <h4>Curl Example</h4>
+              <div class="code-block">
+curl -X GET \
+  http://localhost:5001/api/v1/tenants/plans \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'</div>
+
+              <div class="card">
+                <div class="card-body">
+                  <p>Plan Details:</p>
+                  <p>This endpoint returns detailed information about available subscription plans, including:</p>
+                  <ul>
+                    <li>Pricing information</li>
+                    <li>Feature lists</li>
+                    <li>Resource limits</li>
+                    <li>Plan descriptions</li>
+                  </ul>
+                  <p>This information can be used to display plan comparison tables or pricing pages.</p>
+                </div>
+              </div>
+
+              <h2 class="mt-5">Key Files Involved in Tenant Management</h2>
+
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>File Path</th>
+                      <th>Purpose</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>routes/tenant.routes.js</code></td>
+                      <td>Defines all tenant-related API routes and connects them to the appropriate controller methods</td>
+                    </tr>
+                    <tr>
+                      <td><code>controllers/tenant.controller.js</code></td>
+                      <td>Contains the business logic for handling tenant operations</td>
+                    </tr>
+                    <tr>
+                      <td><code>models/tenant.model.js</code></td>
+                      <td>Defines the database schema for tenant records</td>
+                    </tr>
+                    <tr>
+                      <td><code>services/dbConnectionManager.js</code></td>
+                      <td>Manages connections to tenant-specific databases</td>
+                    </tr>
+                    <tr>
+                      <td><code>services/tenantDbInitializer.js</code></td>
+                      <td>Creates and initializes tenant databases with necessary schemas and initial data</td>
+                    </tr>
+                    <tr>
+                      <td><code>middleware/tenantContext.middleware.js</code></td>
+                      <td>Detects and sets tenant context for each request</td>
+                    </tr>
+                    <tr>
+                      <td><code>middleware/auth.middleware.js</code></td>
+                      <td>Handles authentication and authorization, including tenant-specific access control</td>
+                    </tr>
+                    <tr>
+                      <td><code>services/usageTracking.service.js</code></td>
+                      <td>Tracks tenant resource usage for quota enforcement</td>
+                    </tr>
+                    <tr>
+                      <td><code>services/emailService.js</code></td>
+                      <td>Sends email notifications related to tenant operations</td>
+                    </tr>
+                    <tr>
+                      <td><code>utils/auditLogger.js</code></td>
+                      <td>Logs tenant-related activities for audit purposes</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+        </body>
+</html>

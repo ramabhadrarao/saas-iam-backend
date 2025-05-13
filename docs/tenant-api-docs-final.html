@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenant Management API Documentation (Final Section)</title>
+  <!-- Tabler CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler/1.0.0-beta17/css/tabler.min.css">
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/1.35.0/iconfont/tabler-icons.min.css">
+  <style>
+    .code-block {
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+      font-family: monospace;
+      white-space: pre;
+    }
+    .endpoint {
+      background-color: #e0f2fe;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-family: monospace;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .method {
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      color: white;
+    }
+    .get {
+      background-color: #0ea5e9;
+    }
+    .post {
+      background-color: #22c55e;
+    }
+    .put, .patch {
+      background-color: #f97316;
+    }
+    .delete {
+      background-color: #ef4444;
+    }
+    .auth-required {
+      color: #dc2626;
+      font-weight: bold;
+    }
+    .response {
+      background-color: #f8fafc;
+      border-left: 4px solid #0ea5e9;
+    }
+    .request {
+      background-color: #f8fafc;
+      border-left: 4px solid #22c55e;
+    }
+    h3 {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container-xl">
+      <div class="row">
+        <div class="col-12">
+          <div class="card mt-3">
+            <div class="card-header">
+              <h1 class="card-title">Tenant Management API Documentation (Final Section)</h1>
+            </div>
+            <div class="card-body">
+
+              <div class="alert alert-success mt-3">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-check icon me-2"></i>
+                  </div>
+                  <div>
+                    <h4>Key Benefits of the Multi-Tenant Architecture</h4>
+                    <ul class="mb-0">
+                      <li><strong>Data Isolation:</strong> Complete separation of tenant data</li>
+                      <li><strong>Security:</strong> Tenants cannot access each other's data</li>
+                      <li><strong>Customization:</strong> Each tenant can have customized schemas</li>
+                      <li><strong>Scalability:</strong> Tenant databases can be distributed across servers</li>
+                      <li><strong>Performance:</strong> No cross-tenant table joins or filtering required</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="mt-5">Tenant Lifecycle Management</h2>
+
+              <p>The following diagram illustrates the complete lifecycle of a tenant in the system:</p>
+
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-center">
+                    <div class="w-75">
+                      <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Tenant States -->
+                        <rect x="50" y="100" width="120" height="60" rx="10" fill="#e0f2fe" stroke="#3b82f6" stroke-width="2"/>
+                        <text x="110" y="135" text-anchor="middle" font-size="14">Creation</text>
+                        
+                        <rect x="250" y="100" width="120" height="60" rx="10" fill="#e0f2fe" stroke="#3b82f6" stroke-width="2"/>
+                        <text x="310" y="135" text-anchor="middle" font-size="14">Active</text>
+                        
+                        <rect x="450" y="100" width="120" height="60" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                        <text x="510" y="135" text-anchor="middle" font-size="14">Suspended</text>
+                        
+                        <rect x="650" y="100" width="120" height="60" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="710" y="135" text-anchor="middle" font-size="14">Deleted</text>
+                        
+                        <!-- Arrows -->
+                        <path d="M170,130 L250,130" stroke="#6b7280" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <path d="M370,130 L450,130" stroke="#6b7280" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <path d="M570,130 L650,130" stroke="#6b7280" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <path d="M510,160 L510,200 L310,200 L310,160" stroke="#6b7280" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        
+                        <!-- Action Labels -->
+                        <text x="210" y="120" text-anchor="middle" font-size="12">Initialize</text>
+                        <text x="410" y="120" text-anchor="middle" font-size="12">Suspend</text>
+                        <text x="610" y="120" text-anchor="middle" font-size="12">Delete</text>
+                        <text x="420" y="220" text-anchor="middle" font-size="12">Restore</text>
+                        
+                        <!-- API Endpoints -->
+                        <text x="110" y="175" text-anchor="middle" font-size="10" fill="#3b82f6">POST /api/v1/tenants</text>
+                        <text x="310" y="175" text-anchor="middle" font-size="10" fill="#3b82f6">PATCH /api/v1/tenants/:id</text>
+                        <text x="510" y="175" text-anchor="middle" font-size="10" fill="#3b82f6">POST /api/v1/tenants/:id/suspend</text>
+                        <text x="710" y="175" text-anchor="middle" font-size="10" fill="#3b82f6">DELETE /api/v1/tenants/:id</text>
+                        <text x="420" y="240" text-anchor="middle" font-size="10" fill="#3b82f6">POST /api/v1/tenants/:id/restore</text>
+                        
+                        <!-- Database Operations -->
+                        <rect x="50" y="280" width="120" height="40" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+                        <text x="110" y="305" text-anchor="middle" font-size="12">Create DB</text>
+                        
+                        <rect x="250" y="280" width="120" height="40" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+                        <text x="310" y="305" text-anchor="middle" font-size="12">Active Connection</text>
+                        
+                        <rect x="450" y="280" width="120" height="40" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+                        <text x="510" y="305" text-anchor="middle" font-size="12">Remove Connection</text>
+                        
+                        <rect x="650" y="280" width="120" height="40" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+                        <text x="710" y="305" text-anchor="middle" font-size="12">Delete Records</text>
+                        
+                        <!-- Connection Lines -->
+                        <line x1="110" y1="160" x2="110" y2="280" stroke="#64748b" stroke-width="1" stroke-dasharray="4"/>
+                        <line x1="310" y1="160" x2="310" y2="280" stroke="#64748b" stroke-width="1" stroke-dasharray="4"/>
+                        <line x1="510" y1="160" x2="510" y2="280" stroke="#64748b" stroke-width="1" stroke-dasharray="4"/>
+                        <line x1="710" y1="160" x2="710" y2="280" stroke="#64748b" stroke-width="1" stroke-dasharray="4"/>
+                        
+                        <!-- Arrow Marker -->
+                        <defs>
+                          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+                          </marker>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="mt-5">Tenant Data Migration</h2>
+
+              <p>The platform includes utilities for migrating tenant data between environments. The <code>tenantMigrationTool.js</code> provides several commands for managing tenant databases:</p>
+
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Command</th>
+                      <th>Description</th>
+                      <th>Usage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>migrate-all</code></td>
+                      <td>Migrates all tenants to separate databases</td>
+                      <td><code>node tenantMigrationTool.js migrate-all</code></td>
+                    </tr>
+                    <tr>
+                      <td><code>migrate</code></td>
+                      <td>Migrates a specific tenant by subdomain</td>
+                      <td><code>node tenantMigrationTool.js migrate tenant1</code></td>
+                    </tr>
+                    <tr>
+                      <td><code>validate</code></td>
+                      <td>Validates all tenant databases</td>
+                      <td><code>node tenantMigrationTool.js validate</code></td>
+                    </tr>
+                    <tr>
+                      <td><code>fix</code></td>
+                      <td>Fixes a specific tenant database</td>
+                      <td><code>node tenantMigrationTool.js fix tenant1</code></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4 class="mt-4">Example: Migrating a Tenant</h4>
+
+              <div class="code-block">
+# Migrate a specific tenant
+node utils/tenantMigrationTool.js migrate sample-tenant
+
+# Sample output
+Connected to master database
+Migrating tenant: Sample Company (sample-tenant)
+Connected to shared and tenant databases
+Found 15 users to migrate
+Initialized tenant database schema
+Created tenant settings
+Created default roles and permissions
+Migrated 15 users
+Found 87 audit logs to migrate
+Migrated 87 audit logs
+Migration completed for tenant: sample-tenant</div>
+
+              <h2 class="mt-5">Troubleshooting Tenant Issues</h2>
+
+              <div class="accordion" id="troubleshootingAccordion">
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading1">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+                      Error: "Tenant with this subdomain already exists"
+                    </button>
+                  </h2>
+                  <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="heading1" data-bs-parent="#troubleshootingAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Cause:</strong> The subdomain is already in use by another tenant.</p>
+                      <p><strong>Solution:</strong></p>
+                      <ol>
+                        <li>Check if the tenant with this subdomain already exists using the List Tenants API with a search filter.</li>
+                        <li>Choose a different subdomain for the new tenant.</li>
+                        <li>If the tenant with this subdomain is no longer needed, consider deleting it first.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading2">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                      Error: "Failed to initialize tenant database"
+                    </button>
+                  </h2>
+                  <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#troubleshootingAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Cause:</strong> The system encountered an error while creating or initializing the tenant database.</p>
+                      <p><strong>Solution:</strong></p>
+                      <ol>
+                        <li>Check MongoDB connection parameters and ensure the MongoDB server is running.</li>
+                        <li>Verify that the application has permission to create new databases.</li>
+                        <li>Check if there's sufficient disk space on the MongoDB server.</li>
+                        <li>Inspect server logs for more detailed error messages.</li>
+                        <li>Use the tenant migration tool to fix the database: <code>node utils/tenantMigrationTool.js fix [subdomain]</code></li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading3">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                      Error: "Tenant is inactive"
+                    </button>
+                  </h2>
+                  <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3" data-bs-parent="#troubleshootingAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Cause:</strong> The tenant is suspended or deactivated.</p>
+                      <p><strong>Solution:</strong></p>
+                      <ol>
+                        <li>Check the tenant's status using the Get Tenant by ID API.</li>
+                        <li>If the tenant should be active, use the Restore Tenant API to reactivate it.</li>
+                        <li>If the tenant was suspended for billing issues, address those issues before restoring.</li>
+                        <li>After restoration, verify that users can access the tenant again.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="heading4">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                      Error: "User limit reached for your plan"
+                    </button>
+                  </h2>
+                  <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="heading4" data-bs-parent="#troubleshootingAccordion">
+                    <div class="accordion-body">
+                      <p><strong>Cause:</strong> The tenant has reached the maximum number of users allowed by their subscription plan.</p>
+                      <p><strong>Solution:</strong></p>
+                      <ol>
+                        <li>Check the tenant's current usage using the Get Tenant Usage API.</li>
+                        <li>Upgrade the tenant's subscription plan to one with a higher user limit.</li>
+                        <li>Alternatively, a master admin can override the user limit using the Update Tenant Limits API.</li>
+                        <li>Consider deactivating unused user accounts to free up capacity.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="mt-5">Common Tenant Management Operations</h2>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h3 class="card-title">Creating a Trial Tenant</h3>
+                    </div>
+                    <div class="card-body">
+                      <p>To create a trial tenant with a time-limited subscription:</p>
+                      <ol>
+                        <li>Create a new tenant using the <code>POST /api/v1/tenants</code> endpoint</li>
+                        <li>Choose a professional plan with a trial period</li>
+                        <li>Create the tenant admin user</li>
+                        <li>Set up automatic emails to notify the tenant when the trial is ending</li>
+                      </ol>
+                      <div class="mt-3">
+                        <h4>Sample Curl Command:</h4>
+                        <div class="code-block">
+curl -X POST \
+  http://localhost:5001/api/v1/tenants \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{
+    "name": "Trial Company",
+    "subdomain": "trial-company",
+    "plan": "professional",
+    "contactEmail": "contact@trialcompany.com",
+    "adminEmail": "admin@trialcompany.com",
+    "adminFirstName": "Trial",
+    "adminLastName": "Admin",
+    "adminPassword": "SecurePassword123!"
+  }'</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h3 class="card-title">Upgrading a Tenant's Plan</h3>
+                    </div>
+                    <div class="card-body">
+                      <p>To upgrade a tenant from a lower tier plan to a higher tier:</p>
+                      <ol>
+                        <li>Update the tenant using the <code>PATCH /api/v1/tenants/:id</code> endpoint</li>
+                        <li>Change the <code>plan</code> field to the new plan</li>
+                        <li>The system will automatically adjust resource limits based on the new plan</li>
+                        <li>Billing system will handle proration and new subscription terms</li>
+                      </ol>
+                      <div class="mt-3">
+                        <h4>Sample Curl Command:</h4>
+                        <div class="code-block">
+curl -X PATCH \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85 \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{
+    "plan": "enterprise"
+  }'</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h3 class="card-title">Changing a Tenant's Subdomain</h3>
+                    </div>
+                    <div class="card-body">
+                      <p>To change a tenant's subdomain (URL):</p>
+                      <ol>
+                        <li>Update the tenant using the <code>PATCH /api/v1/tenants/:id</code> endpoint</li>
+                        <li>Provide the new <code>subdomain</code> value</li>
+                        <li>The system will validate that the new subdomain is available</li>
+                        <li>Note: This will change the URL that users use to access the application</li>
+                      </ol>
+                      <div class="mt-3">
+                        <h4>Sample Curl Command:</h4>
+                        <div class="code-block">
+curl -X PATCH \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85 \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{
+    "subdomain": "new-company-name"
+  }'</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h3 class="card-title">Temporarily Suspending a Tenant</h3>
+                    </div>
+                    <div class="card-body">
+                      <p>To temporarily suspend a tenant (e.g., for non-payment):</p>
+                      <ol>
+                        <li>Use the <code>POST /api/v1/tenants/:id/suspend</code> endpoint</li>
+                        <li>Provide a reason for the suspension</li>
+                        <li>The system will immediately prevent all users from accessing the tenant</li>
+                        <li>An email notification will be sent to tenant administrators</li>
+                      </ol>
+                      <div class="mt-3">
+                        <h4>Sample Curl Command:</h4>
+                        <div class="code-block">
+curl -X POST \
+  http://localhost:5001/api/v1/tenants/60d21b4667d0d8992e610c85/suspend \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{
+    "reason": "Payment past due for 30 days"
+  }'</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="mt-5">Integration Points</h2>
+
+              <p>The tenant management system integrates with several other platform services:</p>
+
+              <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Service</th>
+                      <th>Integration</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Billing Service</td>
+                      <td>Subscription Management</td>
+                      <td>When a tenant is created or its plan is changed, the billing service creates or updates the subscription</td>
+                    </tr>
+                    <tr>
+                      <td>Email Service</td>
+                      <td>Notifications</td>
+                      <td>Sends welcome emails, suspension notices, and other tenant-related notifications</td>
+                    </tr>
+                    <tr>
+                      <td>Audit Service</td>
+                      <td>Activity Logging</td>
+                      <td>Records all tenant management operations for auditing and compliance</td>
+                    </tr>
+                    <tr>
+                      <td>Usage Tracking</td>
+                      <td>Resource Monitoring</td>
+                      <td>Tracks tenant resource usage for quota enforcement and billing</td>
+                    </tr>
+                    <tr>
+                      <td>Machine Learning Service</td>
+                      <td>Tenant-Specific ML Models</td>
+                      <td>Each tenant can have their own ML models and datasets with proper isolation</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h2 class="mt-5">Authentication Flow with Tenant Context</h2>
+
+              <p>The authentication system is designed to handle tenant-specific login flows. Here's how it works:</p>
+
+              <div class="row">
+                <div class="col-md-8 offset-md-2">
+                  <div class="card">
+                    <div class="card-body">
+                      <ol class="timeline">
+                        <li class="timeline-event">
+                          <div class="timeline-event-icon bg-primary">
+                            <i class="ti ti-user"></i>
+                          </div>
+                          <div class="timeline-event-card card">
+                            <div class="card-body">
+                              <h4>User Login Request</h4>
+                              <p>
+                                The user attempts to log in with email, password, and tenant context. The tenant context can be provided through:
+                              </p>
+                              <ul>
+                                <li>The subdomain (e.g., <code>tenant1.example.com</code>)</li>
+                                <li>A tenant ID parameter in the request body</li>
+                                <li>A subdomain parameter in the request body</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="timeline-event">
+                          <div class="timeline-event-icon bg-primary">
+                            <i class="ti ti-search"></i>
+                          </div>
+                          <div class="timeline-event-card card">
+                            <div class="card-body">
+                              <h4>Tenant Resolution</h4>
+                              <p>
+                                The authentication controller determines the tenant context:
+                              </p>
+                              <ul>
+                                <li>If tenant context is provided, it checks if the tenant exists and is active</li>
+                                <li>If no tenant context is provided, it assumes a master database login</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="timeline-event">
+                          <div class="timeline-event-icon bg-primary">
+                            <i class="ti ti-database"></i>
+                          </div>
+                          <div class="timeline-event-card card">
+                            <div class="card-body">
+                              <h4>Database Selection</h4>
+                              <p>
+                                Based on the tenant context:
+                              </p>
+                              <ul>
+                                <li>For tenant users, it connects to the tenant-specific database</li>
+                                <li>For master users, it uses the master database</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="timeline-event">
+                          <div class="timeline-event-icon bg-primary">
+                            <i class="ti ti-key"></i>
+                          </div>
+                          <div class="timeline-event-card card">
+                            <div class="card-body">
+                              <h4>Authentication</h4>
+                              <p>
+                                The system authenticates the user against the selected database:
+                              </p>
+                              <ul>
+                                <li>Finds the user by email</li>
+                                <li>Verifies the password</li>
+                                <li>Checks if the user is active</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="timeline-event">
+                          <div class="timeline-event-icon bg-success">
+                            <i class="ti ti-shield"></i>
+                          </div>
+                          <div class="timeline-event-card card">
+                            <div class="card-body">
+                              <h4>JWT Generation</h4>
+                              <p>
+                                Upon successful authentication, a JWT token is generated with:
+                              </p>
+                              <ul>
+                                <li>User ID and email</li>
+                                <li>User type (master_admin, tenant_admin, tenant_user)</li>
+                                <li>Tenant ID (if applicable)</li>
+                                <li>User permissions (for tenant users)</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="mt-5">Conclusion</h2>
+
+              <p>
+                The tenant management system provides a robust foundation for a multi-tenant SaaS platform. By following the documentation and best practices outlined here, you can effectively create, manage, and monitor tenants with proper data isolation and security.
+              </p>
+
+              <p>
+                The database-per-tenant architecture offers strong isolation between tenants, allowing for customization, security, and independent scaling. The comprehensive API endpoints provide all the necessary functions for tenant lifecycle management, from creation to deletion.
+              </p>
+
+              <p>
+                As your platform grows, consider implementing additional features such as:
+              </p>
+
+              <ul>
+                <li>Automated tenant provisioning through API integrations</li>
+                <li>Self-service tenant registration and management</li>
+                <li>Tenant health monitoring and alerting</li>
+                <li>Tenant data export and backup features</li>
+                <li>Cross-tenant analytics for platform administrators</li>
+              </ul>
+
+              <div class="alert alert-info mt-4">
+                <div class="d-flex">
+                  <div>
+                    <i class="ti ti-info-circle icon me-2"></i>
+                  </div>
+                  <div>
+                    <h4>Next Steps</h4>
+                    <p class="mb-0">
+                      With the tenant management foundation in place, you can now integrate it with other platform services such as user management, billing, and application-specific features. Always ensure that tenant context is maintained throughout the request lifecycle to preserve data isolation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabler Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabler/1.0.0-beta17/js/tabler.min.js"></script>
+</body>
+</html>

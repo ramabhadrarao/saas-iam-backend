@@ -3,6 +3,7 @@ const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const UserRole = require('../models/userRole.model');
 const AuditLog = require('../models/auditLog.model');
+const Ticket = require('../models/ticket.model');
 const mongoose = require('mongoose');
 
 // Import the socket service
