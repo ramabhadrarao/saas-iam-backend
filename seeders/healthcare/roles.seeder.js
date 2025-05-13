@@ -1,13 +1,15 @@
-// seeders/healthcare/roles.seeder.js
+// File: seeders/healthcare/roles.seeder.js
+const mongoose = require('mongoose');
 const Role = require('../../models/role.model');
 const Permission = require('../../models/permission.model');
-const mongoose = require('mongoose');
 
 /**
  * Seed default roles for healthcare module
  */
 async function seedHealthcareRoles() {
   try {
+    console.log('Seeding Healthcare roles...');
+    
     // Define default roles with their permissions
     const roles = [
       {
@@ -75,7 +77,8 @@ async function seedHealthcareRoles() {
       const role = new Role({
         name: roleData.name,
         description: roleData.description,
-        permissions: permissionIds
+        permissions: permissionIds,
+        isSystemRole: true
       });
       
       await role.save();

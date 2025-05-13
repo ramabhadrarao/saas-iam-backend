@@ -1,18 +1,20 @@
-// seeders/healthcare/modules.seeder.js
+// File: seeders/healthcare/module.seeder.js
+const mongoose = require('mongoose');
 const Module = require('../../models/module.model');
 const Permission = require('../../models/permission.model');
-const mongoose = require('mongoose');
 
 /**
- * Seed healthcare modules and related permissions
+ * Seed the Healthcare module
  */
-async function seedHealthcareModules() {
+async function seedHealthcareModule() {
   try {
+    console.log('Seeding Healthcare module...');
+    
     // Check if module already exists
     const existingModule = await Module.findOne({ name: 'healthcare' });
     if (existingModule) {
       console.log('Healthcare module already exists');
-      return;
+      return existingModule;
     }
     
     // Create healthcare module
@@ -247,13 +249,30 @@ async function seedHealthcareModules() {
     await healthcareModule.save();
     console.log('Healthcare module created successfully');
     
-    // Create permissions if they don't exist
+    // Create healthcare permissions
+    await seedHealthcarePermissions();
+    
+    return healthcareModule;
+  } catch (error) {
+    console.error('Error seeding healthcare module:', error);
+    throw error;
+  }
+}
+
+/**
+ * Seed Healthcare module permissions
+ */
+async function seedHealthcarePermissions() {
+  try {
+    console.log('Seeding Healthcare permissions...');
+    
+    // Define healthcare permissions
     const permissions = [
       {
         name: 'view_doctors',
         description: 'Can view doctors',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
       {
         name: 'manage_doctors',
@@ -265,9 +284,8 @@ async function seedHealthcareModules() {
         name: 'view_hospitals',
         description: 'Can view hospitals',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
-      // seeders/healthcare/modules.seeder.js (continued)
       {
         name: 'manage_hospitals',
         description: 'Can manage hospitals',
@@ -278,7 +296,7 @@ async function seedHealthcareModules() {
         name: 'view_cases',
         description: 'Can view medical cases',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
       {
         name: 'manage_cases',
@@ -290,7 +308,7 @@ async function seedHealthcareModules() {
         name: 'view_products',
         description: 'Can view products',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
       {
         name: 'manage_products',
@@ -302,7 +320,7 @@ async function seedHealthcareModules() {
         name: 'view_categories',
         description: 'Can view categories',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
       {
         name: 'manage_categories',
@@ -314,7 +332,7 @@ async function seedHealthcareModules() {
         name: 'view_principles',
         description: 'Can view suppliers/principles',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
       {
         name: 'manage_principles',
@@ -326,7 +344,7 @@ async function seedHealthcareModules() {
         name: 'view_departments',
         description: 'Can view departments',
         module: 'healthcare',
-        action: 'view'
+        action: 'read'
       },
       {
         name: 'manage_departments',
@@ -338,36 +356,24 @@ async function seedHealthcareModules() {
         name: 'view_reports',
         description: 'Can view healthcare reports',
         module: 'healthcare',
-        action: 'view'
-      },
-      {
-        name: 'view_modules',
-        description: 'Can view available modules',
-        module: 'system',
-        action: 'view'
-      },
-      {
-        name: 'manage_modules',
-        description: 'Can manage module activation',
-        module: 'system',
-        action: 'manage'
+        action: 'read'
       }
     ];
     
-    for (const perm of permissions) {
-      const existingPerm = await Permission.findOne({ name: perm.name });
-      if (!existingPerm) {
-        await Permission.create(perm);
-        console.log(`Created permission: ${perm.name}`);
+    // Create permissions if they don't exist
+    for (const permission of permissions) {
+      const existingPermission = await Permission.findOne({ name: permission.name });
+      if (!existingPermission) {
+        await Permission.create(permission);
+        console.log(`Created permission: ${permission.name}`);
       }
     }
     
-    console.log('Healthcare module permissions created successfully');
-    
+    console.log('Healthcare permissions created successfully');
   } catch (error) {
-    console.error('Error seeding healthcare module:', error);
+    console.error('Error seeding healthcare permissions:', error);
     throw error;
   }
 }
 
-module.exports = seedHealthcareModules;
+module.exports = seedHealthcareModule;
