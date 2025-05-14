@@ -95,6 +95,108 @@ const caseProductSchema = new mongoose.Schema({
   }
 });
 
+// Case notes
+const caseNoteSchema = new mongoose.Schema({
+  caseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Case',
+    required: true
+  },
+  noteText: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+});
+
+// Case status history
+const caseStatusHistorySchema = new mongoose.Schema({
+  caseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Case',
+    required: true
+  },
+  previousStatus: String,
+  newStatus: {
+    type: String,
+    required: true
+  },
+  changedAt: {
+    type: Date,
+    default: Date.now
+  },
+  changedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  notes: String
+});
+
+// Case documents
+const caseDocumentSchema = new mongoose.Schema({
+  caseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Case',
+    required: true
+  },
+  documentName: {
+    type: String,
+    required: true
+  },
+  documentType: String,
+  filePath: {
+    type: String,
+    required: true
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  },
+  uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+});
+
+// Case followups
+const caseFollowupSchema = new mongoose.Schema({
+  caseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Case',
+    required: true
+  },
+  followupDate: {
+    type: Date,
+    required: true
+  },
+  description: String,
+  status: {
+    type: String,
+    default: 'Pending',
+    enum: ['Pending', 'Completed', 'Cancelled']
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  completedAt: Date,
+  completedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+});
+
 // Pre-save middleware to update timestamps
 caseSchema.pre('save', function(next) {
   this.updatedAt = new Date();
@@ -109,8 +211,16 @@ caseSchema.pre('save', function(next) {
 
 const Case = mongoose.model('Case', caseSchema);
 const CaseProduct = mongoose.model('CaseProduct', caseProductSchema);
+const CaseNote = mongoose.model('CaseNote', caseNoteSchema);
+const CaseStatusHistory = mongoose.model('CaseStatusHistory', caseStatusHistorySchema);
+const CaseDocument = mongoose.model('CaseDocument', caseDocumentSchema);
+const CaseFollowup = mongoose.model('CaseFollowup', caseFollowupSchema);
 
 module.exports = {
   Case,
-  CaseProduct
+  CaseProduct,
+  CaseNote,
+  CaseStatusHistory,
+  CaseDocument,
+  CaseFollowup
 };

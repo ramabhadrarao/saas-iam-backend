@@ -85,6 +85,105 @@ const hospitalDepartmentSchema = new mongoose.Schema({
   }
 });
 
+// Hospital visits
+const hospitalVisitSchema = new mongoose.Schema({
+  hospitalId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hospital',
+    required: true
+  },
+  visitorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  visitDate: {
+    type: Date,
+    required: true
+  },
+  contactMet: String,
+  purpose: String,
+  outcome: String,
+  followUpDate: Date,
+  followUpAction: String,
+  status: {
+    type: String,
+    default: 'Completed'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Hospital agreements
+const hospitalAgreementSchema = new mongoose.Schema({
+  hospitalId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hospital',
+    required: true
+  },
+  agreementType: {
+    type: String,
+    required: true
+  },
+  startDate: {
+    type: Date,
+    required: true
+  },
+  endDate: Date,
+  terms: String,
+  discountPercentage: Number,
+  paymentTerms: String,
+  status: {
+    type: String,
+    default: 'Active'
+  },
+  documentPath: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+});
+
+// Hospital history
+const hospitalHistorySchema = new mongoose.Schema({
+  hospitalId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hospital',
+    required: true
+  },
+  eventType: {
+    type: String,
+    required: true
+  },
+  eventDate: {
+    type: Date,
+    required: true
+  },
+  description: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+});
+
 // Pre-save middleware to update timestamps
 hospitalSchema.pre('save', function(next) {
   this.updatedAt = new Date();
@@ -94,9 +193,15 @@ hospitalSchema.pre('save', function(next) {
 const Hospital = mongoose.model('Hospital', hospitalSchema);
 const HospitalContact = mongoose.model('HospitalContact', hospitalContactSchema);
 const HospitalDepartment = mongoose.model('HospitalDepartment', hospitalDepartmentSchema);
+const HospitalVisit = mongoose.model('HospitalVisit', hospitalVisitSchema);
+const HospitalAgreement = mongoose.model('HospitalAgreement', hospitalAgreementSchema);
+const HospitalHistory = mongoose.model('HospitalHistory', hospitalHistorySchema);
 
 module.exports = {
   Hospital,
   HospitalContact,
-  HospitalDepartment
+  HospitalDepartment,
+  HospitalVisit,
+  HospitalAgreement,
+  HospitalHistory
 };

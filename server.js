@@ -23,6 +23,14 @@ const moduleRoutes = require('./routes/module.routes');  // Add this line
 
 // Healthcare module routes
 const doctorRoutes = require('./routes/healthcare/doctor.routes');  // Add this line
+// Add these imports to the existing import section
+/*const hospitalRoutes = require('./routes/healthcare/hospital.routes');
+const caseRoutes = require('./routes/healthcare/case.routes');
+const productRoutes = require('./routes/healthcare/product.routes');
+const categoryRoutes = require('./routes/healthcare/category.routes');
+const principleRoutes = require('./routes/healthcare/principle.routes');
+const departmentRoutes = require('./routes/healthcare/department.routes');
+*/
 // Import other healthcare routes as needed
 
 const socketService = require('./utils/socketService');
@@ -62,7 +70,14 @@ async function initializeApp() {
     // Healthcare module routes
     app.use('/api/v1/healthcare/doctors', doctorRoutes);  // Add this line
     // Add other healthcare routes as needed
-    
+    /*
+    app.use('/api/v1/healthcare/hospitals', hospitalRoutes);
+app.use('/api/v1/healthcare/cases', caseRoutes);
+app.use('/api/v1/healthcare/products', productRoutes);
+app.use('/api/v1/healthcare/categories', categoryRoutes);
+app.use('/api/v1/healthcare/principles', principleRoutes);
+app.use('/api/v1/healthcare/departments', departmentRoutes);
+    */
     // Tenant plan enforcement middleware
     app.use(enforcePlanLimits);
     
